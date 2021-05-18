@@ -1,0 +1,203 @@
+#app-container {
+  margin: 0;
+  padding: 0px;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  align-items: start;
+  justify-content: start;
+
+  overflow-y: scroll;
+  overflow-x: hidden;
+  /* border: 1px solid green; */
+}
+
+.App {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  align-items: center;
+  justify-content: flex-start;
+  /* border: 1px solid red; */
+}
+
+.App-logo {
+  height: 5vmin;
+  pointer-events: none;
+  margin-top: 5px;
+}
+
+.help-logo {
+  height: 4vmin;
+  pointer-events: none;
+  margin-top: 0px;
+  margin-left: 5px;
+}
+
+.help-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.help-link {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  color: #27292f;
+}
+
+.App-header {
+  /* height: 5vh; */
+  padding: 5px;
+  background-color: #27292f;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: left;
+  /* font-size: calc(1px + 2vmin); */
+  color: white;
+  /* border: 1px solid black; */
+  width: 100%;
+}
+
+.App-title {
+  font-size: calc(10px + 2vmin);
+}
+
+.App-container {
+  padding: 0 20px;
+  font-size: calc(6px + 2vmin);
+}
+
+.url-form {
+  /* width: 100%; */
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+.start-url {
+  border-color: #7457fb;
+  border-width: 2px;
+  border-radius: 10rem !important;
+  /* color: #fff; */
+  font-weight: 900;
+  /* padding: 0.325rem 0.75rem; */
+  padding-top: 0.325rem;
+  padding-bottom: 0.325rem;
+  margin: 0 0px;
+  /* width: 85%; */
+  display: block;
+  width: 80%;
+  margin-bottom: 5px;
+}
+
+.start_url_label {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 0 8px 0;
+  font-size: 13px;
+  /* font-weight: bold; */
+}
+
+.input-url-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  /* border: 1px solid red; */
+  width: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+.buttons-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  /* border: 1px solid red; */
+  width: 100%;
+  padding: 5px 0px;
+}
+
+.sidebuttons {
+  justify-content: space-between;
+}
+
+.App-button {
+  background-color: #7457fb;
+  border-color: #7457fb;
+  border-width: 2px;
+  border-radius: 10rem !important;
+  color: #fff;
+  font-weight: 900;
+  font-size: 12px;
+  padding: 0.625rem 1.75rem;
+  margin: 0 10px;
+  width: 60%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.App-button-secondary {
+  background-color: #ffffff;
+  border-color: #7457fb;
+  color: #7457fb;
+}
+
+.App-button-secondary:hover {
+  background-color: #7457fb;
+  color: #ffffff;
+}
+
+.App-Button-100 {
+  width: 50%;
+}
+
+.App-button:hover {
+  /* background-color: rgba(35, 59, 138, 0.75); */
+  box-shadow: 0 0 0 0.2rem rgba(117, 89, 249, 0.5);
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+#input-copy-to-clipboard {
+  width: 1px;
+  height: 1px;
+  position: absolute;
+  top: -1000px;
+  left: -1000px;
+}
+.copy-status-container {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  justify-content: center;
+}
+.copy-status {
+  width: 100%;
+  color: #fff;
+  font-weight: 900;
+  padding: 0.625rem 1.75rem;
+  margin-top: 5px;
+}
+
+.copy-status.success {
+  background-color: rgb(33, 151, 33);
+}
+.copy-status.error {
+  background-color: #c22f24;
+}
