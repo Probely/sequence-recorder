@@ -11,6 +11,8 @@ Follow the steps below to install and test the extension in dev mode
   or
 
 - Download the [release file](https://github.com/Probely/sequence-recorder/releases) and unzip it
+  - test-build.zip (Chrome)
+  - test-build-firefox.zip (Firefox)
 
 ### Step 2:
 
