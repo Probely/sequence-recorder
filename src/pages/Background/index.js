@@ -2,7 +2,6 @@ import '../../assets/img/icon-34.png';
 import '../../assets/img/icon-128.png';
 
 (function () {
-  // console.log('This is the background page.');
   let startURLDomensionsUpdated = false;
   let aEvents = [];
 

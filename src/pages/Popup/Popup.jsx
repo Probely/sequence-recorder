@@ -66,8 +66,6 @@ const Popup = (props) => {
               url: startURL,
             },
           });
-          // chrome.tabs.create({active: true, url: './start.html'}, (aa) => {
-          // });
           chrome.tabs.create({active: true, url: startURL}, (aa) => {
           });
         });
@@ -86,7 +84,6 @@ const Popup = (props) => {
           chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
             if (tabs && tabs.length) {
               const curTab = tabs[0];
-              // chrome.tabs.reload(curTab.id, {}, () => {});
               chrome.tabs.remove(curTab.id);
               chrome.tabs.create({active: true, url: './review.html'}, (aa) => {
               });
@@ -237,7 +234,6 @@ const Popup = (props) => {
             <button
               type="submit"
               className="App-button"
-              // onClick={() => { onClickStartStopRecording(true); }}
             >{recordingData.length ? 'Start new recording' : 'Start recording'}</button>
           }
         </div>
