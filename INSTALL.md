@@ -17,7 +17,7 @@ Follow the steps below to install and test the extension in dev mode
 ### Step 2:
 
 - Go to `chrome://extensions` [1]
-- Active the `Developer mode` [2]
+- Activate the `Developer mode` [2]
 - Click `Load unpacked` [3]
 
 ![](./readme_assets/01-go_to_chrome_extensions-notes.png '...')
