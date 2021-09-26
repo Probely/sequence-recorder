@@ -4,6 +4,7 @@ import help from '../../assets/img/help.svg';
 import './Popup.css';
 
 const helpURL = 'https://help.probely.com/';
+const siteURL = 'https://probely.com/';
 
 const Popup = (props) => {
   // 🔴
@@ -11,22 +12,22 @@ const Popup = (props) => {
   const [isRecording, setIsRecording] = useState(false);
   const [startURL, setStartURL] = useState('');
   const [recordingData, setRecordingData] = useState([]);
-  const [copyStatus, setCopyStatus] = useState({status: false, error: false, msg: 'Successfully copied to clipboard'});
+  const [copyStatus, setCopyStatus] = useState({ status: false, error: false, msg: 'Successfully copied to clipboard' });
 
   useEffect(() => {
     if (chrome && chrome.storage) {
       chrome.storage.sync.get(['isRecording'], (data) => {
         const recording = data.isRecording;
-        if(recording) {
+        if (recording) {
           setIsRecording(true);
           chrome.browserAction.setBadgeText({
             text: '🔴',
-          }, () => {});
+          }, () => { });
         } else {
           setIsRecording(false);
           chrome.browserAction.setBadgeText({
             text: '',
-          }, () => {});
+          }, () => { });
         }
       });
       chrome.runtime.onMessage.addListener((data, sender, sendResponse) => {
@@ -54,8 +55,8 @@ const Popup = (props) => {
         // }, () => {});
         chrome.browserAction.setBadgeText({
           text: '🔴',
-        }, () => {});
-        chrome.storage.sync.set({isRecording: true}, () => {
+        }, () => { });
+        chrome.storage.sync.set({ isRecording: true }, () => {
           chrome.runtime.sendMessage({
             messageType: 'start',
             event: {
@@ -66,7 +67,7 @@ const Popup = (props) => {
               url: startURL,
             },
           });
-          chrome.tabs.create({active: true, url: startURL}, (aa) => {
+          chrome.tabs.create({ active: true, url: startURL }, (aa) => {
           });
         });
       }
@@ -77,15 +78,15 @@ const Popup = (props) => {
       if (chrome) {
         chrome.browserAction.setBadgeText({
           text: '',
-        }, () => {});
-        chrome.storage.sync.set({isRecording: false}, () => {
+        }, () => { });
+        chrome.storage.sync.set({ isRecording: false }, () => {
           askForRecordingData();
 
-          chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+          chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             if (tabs && tabs.length) {
               const curTab = tabs[0];
               chrome.tabs.remove(curTab.id);
-              chrome.tabs.create({active: true, url: './review.html'}, (aa) => {
+              chrome.tabs.create({ active: true, url: './review.html' }, (aa) => {
               });
             }
           });
@@ -129,7 +130,7 @@ const Popup = (props) => {
           msg: 'Successfully copied to clipboard'
         });
         setTimeout(() => {
-          setCopyStatus({status: false, error: false, msg: ''});
+          setCopyStatus({ status: false, error: false, msg: '' });
         }, 3000);
       } else {
         setCopyStatus({
@@ -138,7 +139,7 @@ const Popup = (props) => {
           msg: 'Error on copy to clipboard'
         });
         setTimeout(() => {
-          setCopyStatus({status: false, error: false, msg: ''});
+          setCopyStatus({ status: false, error: false, msg: '' });
         }, 5000);
       }
     }
@@ -147,7 +148,7 @@ const Popup = (props) => {
   function onClickDownload() {
     var blob = new Blob([JSON.stringify(recordingData, null, 2)], {
       type: "text/plain;charset=utf-8"
-     });
+    });
     var a = document.createElement('a');
     a.download = 'probely-recording.json';
     a.rel = 'noopener';
@@ -172,28 +173,32 @@ const Popup = (props) => {
 
   function onClickHelpLink(ev) {
     ev.preventDefault();
-    chrome.tabs.create({active: true, url: helpURL}, (aa) => {
+    chrome.tabs.create({ active: true, url: helpURL }, (aa) => {
+    });
+  }
+
+  function onClickSiteLink(ev) {
+    fv.preventDefault();
+    chrome.tabs.create({ active: true, url: helpURL }, (aa) => {
     });
   }
 
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <h1 className="App-title">Sequence Recorder</h1>
+        <a
+          href={siteURL}
+          rel="noreferrer"
+          onClick={(ev) => { onClickSiteLink(fv); }}
+        >
+          <img src={logo} className="App-logo" alt="logo" />
+        </a>
       </header>
       <div className="App-container">
+        <h1 className="App-title">Sequence Recorder</h1>
         <p>
-        Use this plugin to record a sequence of steps to be followed by Probely during a scan.{' '}
-        When you finish recording, upload the script to your target settings. 
-        </p>
-        <p className="help-container">
-          <a
-            href={helpURL}
-            className="help-link"
-            rel="noreferrer"
-            onClick={(ev) => { onClickHelpLink(ev); }}
-          >Usage instructions <img src={help} className="help-logo" alt="Help" /></a>
+          Use this plugin to record a sequence of steps to be followed by Probely during a scan.{' '}
+          When you finish recording, upload the script to your target settings.
         </p>
       </div>
       <form
@@ -205,7 +210,7 @@ const Popup = (props) => {
         <div className="input-url-container">
           {isRecording ?
             null
-          :
+            :
             <>
               <label className="start_url_label" htmlFor="start_url">Type the start URL to be recorded</label>
               <input
@@ -224,19 +229,26 @@ const Popup = (props) => {
           }
         </div>
         <div className="buttons-container">
-          {isRecording ? 
+          {isRecording ?
             <p><a
               href="#"
               className="App-button"
               onClick={(ev) => { onClickStartStopRecording(ev, false); }}
             >Stop recording</a></p>
-          : 
+            :
             <button
               type="submit"
               className="App-button"
             >{recordingData.length ? 'Start new recording' : 'Start recording'}</button>
           }
         </div>
+        <p> Check our <a
+          href={helpURL}
+          className="help-url"
+          rel="noreferrer"
+          onClick={(ev) => { onClickHelpLink(ev); }}
+        >Help Center</a> for further information.
+        </p>
       </form>
       {!isRecording && recordingData.length ?
         <>
@@ -262,15 +274,15 @@ const Popup = (props) => {
             >Clear recording data</button>
           </div>
         </>
-      : null}
+        : null}
       <div className="copy-status-container">
         {copyStatus.status ?
-        <div className={copyStatus.error ? 'copy-status error' : 'copy-status success'}>{copyStatus.msg}</div>
-        : null}
+          <div className={copyStatus.error ? 'copy-status error' : 'copy-status success'}>{copyStatus.msg}</div>
+          : null}
       </div>
-      {recordingData.length ? 
+      {recordingData.length ?
         <textarea id="input-copy-to-clipboard" defaultValue={JSON.stringify(recordingData, null, 2)}></textarea>
-      : null}
+        : null}
     </div>
   );
 };
