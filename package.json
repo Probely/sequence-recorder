@@ -15,7 +15,8 @@
     "@types/react-dom": "^17.0.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
-    "react-hot-loader": "^4.13.0"
+    "react-hot-loader": "^4.13.0",
+    "sass": "^1.42.1"
   },
   "devDependencies": {
     "@babel/core": "^7.12.10",

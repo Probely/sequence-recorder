@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Signika:wght@300&display=swap');
 #app-container {
   margin: 0;
   padding: 0px;
@@ -8,11 +9,33 @@
   height: 100%;
   align-items: start;
   justify-content: start;
-
-  overflow-y: scroll;
+  overflow-y: auto;
   overflow-x: hidden;
-  /* border: 1px solid green; */
+  background-color: #27292f;
+  color:whitesmoke;
+  -webkit-box-shadow: 6px 6px 3px 0px rgba(16,16,16,1);
+  -moz-box-shadow: 6px 6px 3px 0px rgba(16,16,16,1);
+  box-shadow: 6px 6px 3px 0px rgba(16,16,16,1);
+  font-family: 'Signika', sans-serif;
+  line-height: 1.2;
 }
+
+::-moz-selection { background: #7457fb; }
+::selection { background: #7457fb; }
+::-webkit-scrollbar-track
+{
+	background-color: #27292f;
+}
+::-webkit-scrollbar
+{
+	width: 3px;
+	background-color: whitesmoke;
+}
+::-webkit-scrollbar-thumb
+{
+	background-color: whitesmoke;
+}
+
 
 .App {
   display: flex;
@@ -27,9 +50,10 @@
 }
 
 .App-logo {
-  height: 5vmin;
+  height: 8vmin;
   pointer-events: none;
   margin-top: 5px;
+  padding: 15px 0px;
 }
 
 .help-logo {
@@ -55,7 +79,8 @@
 .App-header {
   /* height: 5vh; */
   padding: 5px;
-  background-color: #27292f;
+  margin-bottom: 5px;
+  background-color: #7457fb;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -65,6 +90,7 @@
   /* border: 1px solid black; */
   width: 100%;
 }
+​
 
 .App-title {
   font-size: calc(10px + 2vmin);
@@ -72,6 +98,7 @@
 
 .App-container {
   padding: 0 20px;
+  margin-bottom: 15px;
   font-size: calc(6px + 2vmin);
 }
 
@@ -84,12 +111,20 @@
   margin: 0;
 }
 
+.help-url {
+  color: whitesmoke;
+}
+.help-url:hover {
+  font-weight: 900;
+}
+
 .start-url {
   border-color: #7457fb;
   border-width: 2px;
   border-radius: 10rem !important;
   /* color: #fff; */
   font-weight: 900;
+  line-height: 1.2rem;
   /* padding: 0.325rem 0.75rem; */
   padding-top: 0.325rem;
   padding-bottom: 0.325rem;
@@ -98,6 +133,7 @@
   display: block;
   width: 80%;
   margin-bottom: 5px;
+  text-align: center;
 }
 
 .start_url_label {
