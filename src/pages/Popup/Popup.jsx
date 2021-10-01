@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import logo from '../../assets/img/logo_probely.svg';
-import help from '../../assets/img/help.svg';
 import './Popup.css';
 
 const helpURL = 'https://help.probely.com/';

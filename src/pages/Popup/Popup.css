@@ -13,7 +13,6 @@
   overflow-x: hidden;
   background-color: #27292f;
   color:whitesmoke;
-  border-top: solid 3px whitesmoke;
   -webkit-box-shadow: 6px 6px 3px 0px rgba(16,16,16,1);
   -moz-box-shadow: 6px 6px 3px 0px rgba(16,16,16,1);
   box-shadow: 6px 6px 3px 0px rgba(16,16,16,1);
@@ -21,9 +20,22 @@
   line-height: 1.2;
 }
 
-/*overrides css selections*/
 ::-moz-selection { background: #7457fb; }
 ::selection { background: #7457fb; }
+::-webkit-scrollbar-track
+{
+	background-color: #27292f;
+}
+::-webkit-scrollbar
+{
+	width: 3px;
+	background-color: whitesmoke;
+}
+::-webkit-scrollbar-thumb
+{
+	background-color: whitesmoke;
+}
+
 
 .App {
   display: flex;
