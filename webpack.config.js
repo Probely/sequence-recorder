@@ -2,16 +2,16 @@ var webpack = require('webpack'),
   path = require('path'),
   fileSystem = require('fs-extra'),
   env = require('./utils/env'),
-  { CleanWebpackPlugin } = require('clean-webpack-plugin'),
   CopyWebpackPlugin = require('copy-webpack-plugin'),
   HtmlWebpackPlugin = require('html-webpack-plugin'),
   TerserPlugin = require('terser-webpack-plugin');
+var { CleanWebpackPlugin } = require('clean-webpack-plugin');
+var ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
+var ReactRefreshTypeScript = require('react-refresh-typescript');
 
 const ASSET_PATH = process.env.ASSET_PATH || '/';
 
-var alias = {
-  'react-dom': '@hot-loader/react-dom',
-};
+var alias = {};
 
 // load the secrets
 var secretsPath = path.join(__dirname, 'secrets.' + env.NODE_ENV + '.js');
@@ -33,6 +33,8 @@ if (fileSystem.existsSync(secretsPath)) {
   alias['secrets'] = secretsPath;
 }
 
+const isDevelopment = process.env.NODE_ENV !== 'production';
+
 var options = {
   mode: process.env.NODE_ENV || 'development',
   entry: {
@@ -43,11 +45,13 @@ var options = {
     contentScript: path.join(__dirname, 'src', 'pages', 'Content', 'index.js'),
   },
   chromeExtensionBoilerplate: {
+    // notHotReload: ['background', 'contentScript', 'devtools'],
     notHotReload: ['contentScript'],
   },
   output: {
-    path: path.resolve(__dirname, 'build'),
     filename: '[name].bundle.js',
+    path: path.resolve(__dirname, 'build'),
+    clean: true,
     publicPath: ASSET_PATH,
   },
   module: {
@@ -73,18 +77,35 @@ var options = {
       },
       {
         test: new RegExp('.(' + fileExtensions.join('|') + ')$'),
-        loader: 'file-loader',
-        options: {
-          name: '[name].[ext]',
-        },
+        type: 'asset/resource',
         exclude: /node_modules/,
+        // loader: 'file-loader',
+        // options: {
+        //   name: '[name].[ext]',
+        // },
       },
       {
         test: /\.html$/,
         loader: 'html-loader',
         exclude: /node_modules/,
       },
-      { test: /\.(ts|tsx)$/, loader: 'ts-loader', exclude: /node_modules/ },
+      {
+        test: /\.(ts|tsx)$/,
+        exclude: /node_modules/,
+        use: [
+          {
+            loader: require.resolve('ts-loader'),
+            options: {
+              getCustomTransformers: () => ({
+                before: [isDevelopment && ReactRefreshTypeScript()].filter(
+                  Boolean
+                ),
+              }),
+              transpileOnly: isDevelopment,
+            },
+          },
+        ],
+      },
       {
         test: /\.(js|jsx)$/,
         use: [
@@ -92,7 +113,12 @@ var options = {
             loader: 'source-map-loader',
           },
           {
-            loader: 'babel-loader',
+            loader: require.resolve('babel-loader'),
+            options: {
+              plugins: [
+                isDevelopment && require.resolve('react-refresh/babel'),
+              ].filter(Boolean),
+            },
           },
         ],
         exclude: /node_modules/,
@@ -106,12 +132,9 @@ var options = {
       .concat(['.js', '.jsx', '.ts', '.tsx', '.css']),
   },
   plugins: [
+    isDevelopment && new ReactRefreshWebpackPlugin(),
+    new CleanWebpackPlugin({ verbose: false }),
     new webpack.ProgressPlugin(),
-    // clean the build folder
-    new CleanWebpackPlugin({
-      verbose: true,
-      cleanStaleWebpackAssets: true,
-    }),
     // expose and write the allowed env vars on the compiled bundle
     new webpack.EnvironmentPlugin(['NODE_ENV']),
     new CopyWebpackPlugin({
@@ -142,12 +165,63 @@ var options = {
         },
       ],
     }),
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: 'src/assets/img/icon-128.png',
+          to: path.join(__dirname, 'build'),
+          force: true,
+        },
+      ],
+    }),
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: 'src/assets/img/icon-34.png',
+          to: path.join(__dirname, 'build'),
+          force: true,
+        },
+      ],
+    }),
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: 'src/assets/img/icon-48.png',
+          to: path.join(__dirname, 'build'),
+          force: true,
+        },
+      ],
+    }),
+    // new HtmlWebpackPlugin({
+    //   template: path.join(__dirname, 'src', 'pages', 'Newtab', 'index.html'),
+    //   filename: 'newtab.html',
+    //   chunks: ['newtab'],
+    //   cache: false,
+    // }),
+    // new HtmlWebpackPlugin({
+    //   template: path.join(__dirname, 'src', 'pages', 'Options', 'index.html'),
+    //   filename: 'options.html',
+    //   chunks: ['options'],
+    //   cache: false,
+    // }),
     new HtmlWebpackPlugin({
       template: path.join(__dirname, 'src', 'pages', 'Popup', 'index.html'),
       filename: 'popup.html',
       chunks: ['popup'],
       cache: false,
     }),
+    // new HtmlWebpackPlugin({
+    //   template: path.join(__dirname, 'src', 'pages', 'Devtools', 'index.html'),
+    //   filename: 'devtools.html',
+    //   chunks: ['devtools'],
+    //   cache: false,
+    // }),
+    // new HtmlWebpackPlugin({
+    //   template: path.join(__dirname, 'src', 'pages', 'Panel', 'index.html'),
+    //   filename: 'panel.html',
+    //   chunks: ['panel'],
+    //   cache: false,
+    // }),
     new HtmlWebpackPlugin({
       template: path.join(
         __dirname,
@@ -172,14 +246,14 @@ var options = {
       chunks: ['reviewpage'],
       cache: false,
     }),
-  ],
+  ].filter(Boolean),
   infrastructureLogging: {
     level: 'info',
   },
 };
 
 if (env.NODE_ENV === 'development') {
-  options.devtool = 'eval-cheap-module-source-map';
+  options.devtool = 'cheap-module-source-map';
 } else {
   options.optimization = {
     minimize: true,

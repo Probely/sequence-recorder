@@ -9,10 +9,9 @@ const Review = (props) => {
   const [recordingData, setRecordingData] = useState([]);
   const [recordingDataDownload, setRecordingDataDownload] = useState([]);
   const [copyStatus, setCopyStatus] = useState({status: false, error: false, msg: 'Successfully copied to clipboard'});
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(true);
 
   useEffect(() => {
-    console.log('IN use effect 1 review:: ')
     chrome.runtime.onMessage.addListener((data, sender, sendResponse) => {
       if (data.messageType === 'recording_data' && !hasData) {
         hasData = true;
@@ -153,7 +152,15 @@ const Review = (props) => {
     const tgt = ev.target;
     const tmp = JSON.parse(JSON.stringify(recordingData));
     const val = tgt.value;
-    if (idx === 0 && val !== 'force' && val !== 'loggedin_start_url') {
+    // This will be used in the future
+    // if (idx === 0 && val !== 'force' && val !== 'loggedin_start_url') {
+    //   return;
+    // }
+    
+    // For now only allow "force" and "ignore"
+    if (idx === 0 && val !== 'force') {
+      return;
+    } else if (idx !== 0 && val !== 'ignore') {
       return;
     }
     tmp[idx].opt.urlType = tgt.value;
@@ -274,6 +281,7 @@ const Review = (props) => {
               id="review_advanced_options"
               value="1"
               className="form-control input_custom"
+              checked={showAdvanced}
               onChange={(ev) => { onChangeReviewAdvanced(ev); }}
             /><label htmlFor="review_advanced_options" className="review_advanced_options_text">Advanced options</label>
           </div>
@@ -292,7 +300,7 @@ const Review = (props) => {
               Note that changing the sequence in any way could prevent the crawler from successfully replaying it.</p>
               <p>Some tips:</p>
               <ul>
-                <li>You can edit CSS selectors (click on CSS selector) to adjust some possible variable selectors.{' '}
+                <li>You can edit the CSS selectors (click on the CSS selector) to adjust some possible variable selectors.{' '}
                 For instance for the selector "<code><b>#foo &gt; .nav-item.item_42</b></code>" where "42" is an ID,{' '}
                 using "<code><b>.item_42</b></code>" is not recomended.
                 </li>
@@ -307,7 +315,7 @@ const Review = (props) => {
                       <li><code><b>&#123;RAND_NUMBER[10-99]&#125;</b></code> - random number between X and Y (e.g. 10 and 99)</li>
                     </ul>
                 </li>
-                <li>
+                {/* <li>
                   For "<b>go to</b>" items, you can define if the URL needs to be checked or forced.
                   <ul>
                     <li><code><b>Ignore</b></code> - Default, let the crawler do its job.</li>
@@ -315,7 +323,7 @@ const Review = (props) => {
                     <li><code><b>Check URL</b></code> - The URL is checked and the current URL during the sequence needs to be equal to the given URL.</li>
                     <li><code><b>Go to URL after login</b></code> - When URL after login is variable (e.g. has a session token there), use this option to start the sequence with the URL after login done.</li>
                   </ul>
-                </li>
+                </li> */}
               </ul>
             </div>
             <table className="review_table">
@@ -336,6 +344,7 @@ const Review = (props) => {
                           type="checkbox"
                           name={`item_name_${idx}`}
                           value={idx}
+                          disabled={idx === 0}
                           checked={item.opt.checked}
                           className="t_line_checkbox"
                           onChange={(ev) => { onChangeTableCheck(ev, idx); }}
@@ -400,32 +409,33 @@ const Review = (props) => {
                         {item.type === 'change' && item.subtype === 'check' ? item.checked ? 'checked' : 'not checked' : null}
                         {item.type === 'change' && item.subtype === 'select' ? `index ${item.selected}` : null}
                         {item.type === 'goto' ? (
-                          <select
-                            value={item.opt.urlType}
-                            // disabled={item.opt.urlDisabled}
-                            // readOnly={item.opt.urlDisabled}
-                            className="t_selector_select"
-                            onChange={(ev) => { onChangeTableUrlType(ev, idx); }}
-                          >
-                            <option
-                              value="force"
-                            >Go to URL</option>
-                            <option
-                              value="loggedin_start_url"
-                              disabled={!item.opt.urlDisabled}
-                              readOnly={!item.opt.urlDisabled}
-                            >Go to URL after login</option>
-                            <option
-                              value="ignore"
-                              disabled={item.opt.urlDisabled}
-                              readOnly={item.opt.urlDisabled}
-                            >Ignore</option>
-                            <option
-                              value="check"
-                              disabled={item.opt.urlDisabled}
-                              readOnly={item.opt.urlDisabled}
-                            >Check URL</option>
-                          </select>
+                          <span>Navigate to URL</span>
+                          // <select
+                          //   value={item.opt.urlType}
+                          //   // disabled={item.opt.urlDisabled}
+                          //   // readOnly={item.opt.urlDisabled}
+                          //   className="t_selector_select"
+                          //   onChange={(ev) => { onChangeTableUrlType(ev, idx); }}
+                          // >
+                          //   <option
+                          //     value="force"
+                          //   >Go to URL</option>
+                          //   <option
+                          //     value="loggedin_start_url"
+                          //     disabled={!item.opt.urlDisabled}
+                          //     readOnly={!item.opt.urlDisabled}
+                          //   >Go to URL after login</option>
+                          //   <option
+                          //     value="ignore"
+                          //     disabled={item.opt.urlDisabled}
+                          //     readOnly={item.opt.urlDisabled}
+                          //   >Ignore</option>
+                          //   <option
+                          //     value="check"
+                          //     disabled={item.opt.urlDisabled}
+                          //     readOnly={item.opt.urlDisabled}
+                          //   >Check URL</option>
+                          // </select>
                         ) : null}
                       </td>
                     </tr>    

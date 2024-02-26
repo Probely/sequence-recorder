@@ -1,5 +1,6 @@
 import { interceptEvents } from './modules/collectEvents';
 import getNodeSelector from './modules/getNodeSelector';
+import getCustomSelector from './modules/getCustomSelector';
 
 (function () {
   // console.log('CONTENT SCRIPT HAS BEEN LOADED');
@@ -36,7 +37,14 @@ import getNodeSelector from './modules/getNodeSelector';
       if (!data.isRecording) {
         return;
       }
+
+      let mutationDetected = false;
+      let stoMutation = null;
+
       function eventInterceptopMainHandler(ev) {
+        if (ev && ev.type === 'mouseover' && !mutationDetected) {
+          return;
+        }
         interceptEvents(ev, window.document, null, (obj) => {
           chrome.runtime.sendMessage(obj);
         });
@@ -88,11 +96,19 @@ import getNodeSelector from './modules/getNodeSelector';
       }
 
       function addEventsToIframe(ifr, force) {
-        const ifrSelector = getNodeSelector(ifr, {
-          root: window.document,
-          seedMinLength: 3,
-          optimizedMinLength: 3,
-        });
+        let ifrSelector = null;
+        try {
+          ifrSelector = getCustomSelector(ifr, window.document);
+        } catch (ex) {
+          // ignore
+        }
+        if (!ifrSelector) {
+          ifrSelector = getNodeSelector(ifr, {
+            root: window.document,
+            seedMinLength: 3,
+            optimizedMinLength: 3,
+          });
+        }
         function eventInterceptopFrameHandler(ev) {
           interceptEvents(
             ev,
@@ -177,11 +193,20 @@ import getNodeSelector from './modules/getNodeSelector';
       });
 
       const mutationConfig = {
-        attributes: true,
+        attributes: false,
         childList: true,
         subtree: true,
       };
       const onMutationCallback = async (mutationsList, observer) => {
+        mutationDetected = true;
+        if (stoMutation) {
+          clearTimeout(stoMutation);
+          stoMutation = null;
+        }
+        stoMutation = setTimeout(() => {
+          // keep "mutationDetected" enabled within 200ms
+          mutationDetected = false;
+        }, 200);
         for (const mutation of mutationsList) {
           for (let i = 0; i < mutation.addedNodes.length; i++) {
             const mutationNode = mutation.addedNodes[i];
@@ -219,7 +244,7 @@ import getNodeSelector from './modules/getNodeSelector';
         }
       };
       const observer = new MutationObserver(onMutationCallback);
-      observer.observe(document.documentElement, mutationConfig);
+      observer.observe(document.body, mutationConfig);
     });
   }
 })();

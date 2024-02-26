@@ -185,6 +185,16 @@ table tr {
   /* border: 1px solid red; */
   display: block;
   cursor: pointer;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.review_table .t_url {
+  font-family: 'Courier New', Courier, monospace;
+  /* border: 1px solid red; */
+  display: block;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .t_selector_input,
