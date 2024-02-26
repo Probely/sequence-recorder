@@ -7,14 +7,14 @@ import '../../assets/img/icon-128.png';
 
   chrome.storage.sync.get(['isRecording'], (data) => {
     if (data.isRecording) {
-      chrome.browserAction.setBadgeText(
+      (chrome.action || chrome.browserAction).setBadgeText(
         {
           text: '🔴',
         },
         () => {}
       );
     } else {
-      chrome.browserAction.setBadgeText(
+      (chrome.action || chrome.browserAction).setBadgeText(
         {
           text: '',
         },

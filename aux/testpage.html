@@ -1,0 +1,187 @@
+<!doctype html>
+<html>
+<head>
+
+<meta charset="utf-8">
+<title>...</title>
+<style type="text/css">
+  body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+  }
+  .container {
+    display: flex;
+    flex: 1;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .item_test_container {
+    display: flex;
+    /* flex: 1; */
+    flex-direction: column;
+    align-items: center;
+    vertical-align: middle;
+    border: 1px solid blue;
+    width: 300px;
+    text-align: center;
+  }
+  input, button, select {
+    margin: 20px;
+  }
+  #mouse_over_elm {
+    height: 100%;
+    width: 100%;
+    border: 1px solid red;
+  }
+</style>
+</head>
+<body>
+  <h1>Get elements test page</h1>
+  <div class="container">
+    <div class="item_test_container">
+      <a href="#" id="a_id">
+        <p><span>span ("a" > "p" > "span")</span></p>
+      </a>
+    </div>
+    <div class="item_test_container">
+      <button type="button" id="button_id">
+        <span><b>b ("button" > "span" > "b")</b></span>
+      </a>
+    </div>
+    <div class="item_test_container">
+      <ul id="ul_id">
+        <li>li item 1</li>
+        <li>li item 2</li>
+        <li>li item 3</li>
+        <li>li item 4</li>
+      </ul>
+      <ul id="ul_id">
+        <li>li item 1</li>
+        <li>li item 2</li>
+        <li>li item 3</li>
+        <li>li item 4</li>
+      </ul>
+    </div>
+    <div class="item_test_container">
+      <select id="">
+        <option value="option_1">option 1</option>
+        <option value="option_2">option 2</option>
+        <option value="option_3">option 3</option>
+        <option value="option_4">option 4</option>
+      </select>
+    </div>
+    <div class="item_test_container">
+      <input type="text" id="input_text_id">
+      <input type="text" name="input_text_name">
+    </div>
+    <div class="item_test_container">
+      <p>SVG HERE</p>
+      <p>
+        <svg id="svg_icon1" xmlns="http://www.w3.org/2000/svg" width="80px" height="60px" viewBox="0 0 1024 1024" class="icon" version="1.1"><path d="M432.4 453.5l-17 46.7h34.4z" fill="#FFFFFF"/><path d="M725.3 259.7H312.2c-16.5 0-30 13.5-30 30v413.1c0 16.5 13.5 30 30 30h413.1c16.5 0 30-13.5 30-30V289.7c0-16.6-13.5-30-30-30z m-98.8 164.5h25.4V550h-25.4V424.2z m-116.5 0h40.8c15.5 0 25.5 0.6 30.2 1.9 7.2 1.9 13.2 6 18.1 12.3 4.9 6.3 7.3 14.5 7.3 24.5 0 7.7-1.4 14.2-4.2 19.5s-6.4 9.4-10.7 12.4c-4.3 3-8.7 5-13.2 6-6.1 1.2-14.8 1.8-26.4 1.8h-16.6V550H510V424.2z m-90.7 0h26.9L496.5 550h-27.6l-11-28.6h-50.3L397.2 550h-27l49.1-125.8z m229.1 273.3H352.6c-19.4 0-35.1-15.7-35.1-35.1v-295c0-5.5 4.5-10 10-10s10 4.5 10 10v295c0 8.3 6.8 15.1 15.1 15.1h295.8c5.5 0 10 4.5 10 10s-4.4 10-10 10z" fill="#FFFFFF"/><path d="M569.4 479.2c3.4-1.3 6-3.4 7.9-6.2 1.9-2.8 2.9-6.1 2.9-9.8 0-4.6-1.3-8.4-4-11.3-2.7-3-6.1-4.8-10.2-5.6-3-0.6-9.1-0.9-18.3-0.9h-12.3v35.7h13.9c10 0.1 16.7-0.6 20.1-1.9z" fill="#FFFFFF"/><path d="M648.4 677.5H352.6c-8.3 0-15.1-6.8-15.1-15.1v-295c0-5.5-4.5-10-10-10s-10 4.5-10 10v295c0 19.4 15.7 35.1 35.1 35.1h295.8c5.5 0 10-4.5 10-10s-4.4-10-10-10z" fill="#06F3FF"/><path d="M865 386.5c11 0 20-9 20-20s-9-20-20-20h-69.7v-56.8c0-38.6-31.4-70-70-70h-27.8v-67.3c0-11-9-20-20-20s-20 9-20 20v67.3H611v-67.3c0-11-9-20-20-20s-20 9-20 20v67.3h-46.5v-67.3c0-11-9-20-20-20s-20 9-20 20v67.3H438v-67.3c0-11-9-20-20-20s-20 9-20 20v67.3h-85.8c-38.6 0-70 31.4-70 70v56.8h-69.7c-11 0-20 9-20 20s9 20 20 20h69.7V433h-69.7c-11 0-20 9-20 20s9 20 20 20h69.7v46.5h-69.7c-11 0-20 9-20 20s9 20 20 20h69.7V606h-69.7c-11 0-20 9-20 20s9 20 20 20h69.7v56.8c0 38.6 31.4 70 70 70H343v72.5c0 11 9 20 20 20s20-9 20-20v-72.5h46.5v72.5c0 11 9 20 20 20s20-9 20-20v-72.5H516v72.5c0 11 9 20 20 20s20-9 20-20v-72.5h46.5v72.5c0 11 9 20 20 20s20-9 20-20v-72.5h82.8c38.6 0 70-31.4 70-70V646H865c11 0 20-9 20-20s-9-20-20-20h-69.7v-46.5H865c11 0 20-9 20-20s-9-20-20-20h-69.7V473H865c11 0 20-9 20-20s-9-20-20-20h-69.7v-46.5H865zM755.3 702.7c0 16.5-13.5 30-30 30H312.2c-16.5 0-30-13.5-30-30v-413c0-16.5 13.5-30 30-30h413.1c16.5 0 30 13.5 30 30v413z" fill="#005BFF"/><path d="M407.6 521.4h50.3l11 28.6h27.6l-50.4-125.8h-26.9l-49 125.8h27l10.4-28.6z m24.8-67.9l17.3 46.7h-34.3l17-46.7zM535.4 502.6H552c11.5 0 20.3-0.6 26.4-1.8 4.5-1 8.9-3 13.2-6 4.3-3 7.9-7.1 10.7-12.4s4.2-11.8 4.2-19.5c0-10-2.4-18.2-7.3-24.5-4.9-6.3-10.9-10.4-18.1-12.3-4.7-1.3-14.8-1.9-30.2-1.9H510V550h25.4v-47.4z m0-57.1h12.3c9.2 0 15.2 0.3 18.3 0.9 4.1 0.7 7.5 2.6 10.2 5.6 2.7 3 4 6.8 4 11.3 0 3.7-1 7-2.9 9.8-1.9 2.8-4.6 4.9-7.9 6.2-3.4 1.3-10.1 2-20.1 2h-13.9v-35.8zM626.5 424.2h25.4V550h-25.4z" fill="#005BFF"/></svg>
+      </p>
+      <p data-test-id="data-test-svg-icon">
+        <svg id="svg_icon2" xmlns="http://www.w3.org/2000/svg" width="80px" height="60px" viewBox="0 0 1024 1024" class="icon" version="1.1"><path d="M432.4 453.5l-17 46.7h34.4z" fill="#FFFFFF"/><path d="M725.3 259.7H312.2c-16.5 0-30 13.5-30 30v413.1c0 16.5 13.5 30 30 30h413.1c16.5 0 30-13.5 30-30V289.7c0-16.6-13.5-30-30-30z m-98.8 164.5h25.4V550h-25.4V424.2z m-116.5 0h40.8c15.5 0 25.5 0.6 30.2 1.9 7.2 1.9 13.2 6 18.1 12.3 4.9 6.3 7.3 14.5 7.3 24.5 0 7.7-1.4 14.2-4.2 19.5s-6.4 9.4-10.7 12.4c-4.3 3-8.7 5-13.2 6-6.1 1.2-14.8 1.8-26.4 1.8h-16.6V550H510V424.2z m-90.7 0h26.9L496.5 550h-27.6l-11-28.6h-50.3L397.2 550h-27l49.1-125.8z m229.1 273.3H352.6c-19.4 0-35.1-15.7-35.1-35.1v-295c0-5.5 4.5-10 10-10s10 4.5 10 10v295c0 8.3 6.8 15.1 15.1 15.1h295.8c5.5 0 10 4.5 10 10s-4.4 10-10 10z" fill="#FFFFFF"/><path d="M569.4 479.2c3.4-1.3 6-3.4 7.9-6.2 1.9-2.8 2.9-6.1 2.9-9.8 0-4.6-1.3-8.4-4-11.3-2.7-3-6.1-4.8-10.2-5.6-3-0.6-9.1-0.9-18.3-0.9h-12.3v35.7h13.9c10 0.1 16.7-0.6 20.1-1.9z" fill="#FFFFFF"/><path d="M648.4 677.5H352.6c-8.3 0-15.1-6.8-15.1-15.1v-295c0-5.5-4.5-10-10-10s-10 4.5-10 10v295c0 19.4 15.7 35.1 35.1 35.1h295.8c5.5 0 10-4.5 10-10s-4.4-10-10-10z" fill="#06F3FF"/><path d="M865 386.5c11 0 20-9 20-20s-9-20-20-20h-69.7v-56.8c0-38.6-31.4-70-70-70h-27.8v-67.3c0-11-9-20-20-20s-20 9-20 20v67.3H611v-67.3c0-11-9-20-20-20s-20 9-20 20v67.3h-46.5v-67.3c0-11-9-20-20-20s-20 9-20 20v67.3H438v-67.3c0-11-9-20-20-20s-20 9-20 20v67.3h-85.8c-38.6 0-70 31.4-70 70v56.8h-69.7c-11 0-20 9-20 20s9 20 20 20h69.7V433h-69.7c-11 0-20 9-20 20s9 20 20 20h69.7v46.5h-69.7c-11 0-20 9-20 20s9 20 20 20h69.7V606h-69.7c-11 0-20 9-20 20s9 20 20 20h69.7v56.8c0 38.6 31.4 70 70 70H343v72.5c0 11 9 20 20 20s20-9 20-20v-72.5h46.5v72.5c0 11 9 20 20 20s20-9 20-20v-72.5H516v72.5c0 11 9 20 20 20s20-9 20-20v-72.5h46.5v72.5c0 11 9 20 20 20s20-9 20-20v-72.5h82.8c38.6 0 70-31.4 70-70V646H865c11 0 20-9 20-20s-9-20-20-20h-69.7v-46.5H865c11 0 20-9 20-20s-9-20-20-20h-69.7V473H865c11 0 20-9 20-20s-9-20-20-20h-69.7v-46.5H865zM755.3 702.7c0 16.5-13.5 30-30 30H312.2c-16.5 0-30-13.5-30-30v-413c0-16.5 13.5-30 30-30h413.1c16.5 0 30 13.5 30 30v413z" fill="#005BFF"/><path d="M407.6 521.4h50.3l11 28.6h27.6l-50.4-125.8h-26.9l-49 125.8h27l10.4-28.6z m24.8-67.9l17.3 46.7h-34.3l17-46.7zM535.4 502.6H552c11.5 0 20.3-0.6 26.4-1.8 4.5-1 8.9-3 13.2-6 4.3-3 7.9-7.1 10.7-12.4s4.2-11.8 4.2-19.5c0-10-2.4-18.2-7.3-24.5-4.9-6.3-10.9-10.4-18.1-12.3-4.7-1.3-14.8-1.9-30.2-1.9H510V550h25.4v-47.4z m0-57.1h12.3c9.2 0 15.2 0.3 18.3 0.9 4.1 0.7 7.5 2.6 10.2 5.6 2.7 3 4 6.8 4 11.3 0 3.7-1 7-2.9 9.8-1.9 2.8-4.6 4.9-7.9 6.2-3.4 1.3-10.1 2-20.1 2h-13.9v-35.8zM626.5 424.2h25.4V550h-25.4z" fill="#005BFF"/></svg>
+      </p>
+    </div>
+    <div class="item_test_container" id="div_includes_same_id_elms">
+      <p id="duplicated_id">duplicated id 1</p>
+      <p id="duplicated_id">duplicated id 2</p>
+    </div>
+    <div class="item_test_container">
+      <form method="post" id="the_form" action="#" onsubmit="return false;">
+        <p>From inputs with no names or IDs and multiple buttons</p>
+        <p><label>U: <input type="text"></label></p>
+        <p><label>P: <input type="password"></label></p>
+        <p>
+          <button type="button">Reset</button>
+          <button type="submit">Submit</button>
+          <button type="button">Cancel</button>
+        </p>
+      </form>
+    </div>
+    <div class="item_test_container">
+      <p>Custom elements with different tags</p>
+      <custom-a>text a</custom-a>
+      <custom-b>text b</custom-b>
+      <custom-c>text c - 1</custom-c>
+      <custom-c>text c - 2</custom-c>
+    </div>
+    <div class="item_test_container">
+      <div id="mouse_over_elm">
+        Mouse over me
+        <div></div>
+      </div>
+    </div>
+    <div class="item_test_container">
+      <p><a href="./secondpage.html">Go to second page</a></p>
+    </div>
+    <div class="item_test_container">
+      <p>Elements that only change attribute</p>
+      <div id="mouse_over_attributes">
+        Mouse over to hange color
+      </div>
+    </div>
+    <div class="item_test_container">
+      <iframe src="./iframe.html" style="width: 90%; height: 90%"></iframe>
+    </div>
+    <div class="item_test_container" id="div_includes_data_test_id">
+      <p id="duplicated_id" data-test-id="data-test-1">elm with data-test <span>id 1</span></p>
+      <p id="duplicated_id" data-test-id="data-test-2">elm with data-test <span>id 2</span></p>
+    </div>
+  </div>
+
+<script src="./finder_testpage.js"></script>
+<script src="./testpage.js"></script>
+<script>
+(() => {
+  document.querySelector('#mouse_over_elm').addEventListener('mouseenter', (ev) => {
+    const a = document.createElement('a');
+    a.id = 'link_on_mouse_over';
+    a.textContent = 'click me';
+    document.querySelector('#mouse_over_elm > div').appendChild(a);
+  });
+  document.querySelector('#mouse_over_elm').addEventListener('mouseleave', (ev) => {
+    document.querySelector('#mouse_over_elm > div').innerHTML = '';
+  });
+  document.querySelector('#mouse_over_attributes').addEventListener('mouseenter', (ev) => {
+    ev.target.style.backgroundColor = 'red';
+  });
+  document.querySelector('#mouse_over_attributes').addEventListener('mouseleave', (ev) => {
+    ev.target.style.backgroundColor = 'yellow';
+  });
+  // document.body.addEventListener('click', (ev) => {
+  //   const node = ev.target;
+  //   console.log('ev.target => ', node)
+  //   const bestElm = getBestElement(node);
+  //   console.log('best elm => ', bestElm)
+  //   let selector = getCustomSelector(bestElm);
+  //   console.log('my selector => ', selector)
+  //   if (!selector) {
+  //     console.log('had to use finder()...')
+  //     selector = finder(bestElm, {
+  //       root: document.body,
+  //       idName: (name) => {
+  //         return !/^[0-9]+.*/i.test(name);
+  //       },
+  //       className: (name) => {
+  //         return (
+  //           !name.includes('focus') &&
+  //           !name.includes('highlight') &&
+  //           !/^[0-9]+.*/i.test(name)
+  //         );
+  //       },
+  //       tagName: (name) => false,
+  //       seedMinLength: 1,
+  //       optimizedMinLength: 3,
+  //     });
+  //   }
+  //   console.log('final selector => ', selector)
+  //   console.log('----------------------------------------------------------------------------')
+  // }, false);
+})()
+
+</script>
+
+</body>
+</html>

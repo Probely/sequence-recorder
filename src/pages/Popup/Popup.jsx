@@ -19,12 +19,12 @@ const Popup = (props) => {
         const recording = data.isRecording;
         if(recording) {
           setIsRecording(true);
-          chrome.browserAction.setBadgeText({
+          (chrome.action || chrome.browserAction).setBadgeText({
             text: '🔴',
           }, () => {});
         } else {
           setIsRecording(false);
-          chrome.browserAction.setBadgeText({
+          (chrome.action || chrome.browserAction).setBadgeText({
             text: '',
           }, () => {});
         }
@@ -49,10 +49,7 @@ const Popup = (props) => {
     if (recordingState === true) {
       setRecordingData([]);
       if (chrome) {
-        // chrome.browserAction.setBadgeBackgroundColor({
-        //   color: '#FFFFFF'
-        // }, () => {});
-        chrome.browserAction.setBadgeText({
+        (chrome.action || chrome.browserAction).setBadgeText({
           text: '🔴',
         }, () => {});
         chrome.storage.sync.set({isRecording: true}, () => {
@@ -75,7 +72,7 @@ const Popup = (props) => {
         ev.preventDefault();
       }
       if (chrome) {
-        chrome.browserAction.setBadgeText({
+        (chrome.action || chrome.browserAction).setBadgeText({
           text: '',
         }, () => {});
         chrome.storage.sync.set({isRecording: false}, () => {

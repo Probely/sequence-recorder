@@ -1,4 +1,7 @@
-import getNodeSelector from './getNodeSelector';
+// import getNodeSelector from './getNodeSelector';
+import getNodeSelector from './finder';
+import getBestElement from './getBestElement';
+import getCustomSelector from './getCustomSelector';
 import getXPath from './getXPath';
 
 const oNodes = {};
@@ -39,25 +42,39 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
   //   ' :: event :: ',
   //   event
   // );
-  const selector = getNodeSelector(tgt, {
-    root: doc,
-    idName: (name) => {
-      return !/^[0-9]+.*/i.test(name);
-    },
-    className: (name) => {
-      return (
-        !name.includes('focus') &&
-        !name.includes('highlight') &&
-        !/^[0-9]+.*/i.test(name)
-      );
-    },
-    seedMinLength: 3,
-    optimizedMinLength: 3,
-  });
+  let selector = null;
+  let bestElm = null;
+  try {
+    bestElm = getBestElement(tgt, doc);
+    selector = getCustomSelector(bestElm, doc);
+  } catch (ex) {
+    // ignore
+  }
+  if (!selector) {
+    try {
+      selector = getNodeSelector(bestElm, {
+        root: doc,
+        idName: (name) => {
+          return !/^[0-9]+.*/i.test(name);
+        },
+        className: (name) => {
+          return (
+            !name.includes('focus') &&
+            !name.includes('highlight') &&
+            !/^[0-9]+.*/i.test(name)
+          );
+        },
+        // seedMinLength: 3,
+        // optimizedMinLength: 3,
+      });
+    } catch (ex) {
+      // ignore
+    }
+  }
   if (selector && selector.toLowerCase() === 'html') {
     return;
   }
-  const xpath = getXPath(tgt, doc);
+  const xpath = getXPath(bestElm, doc);
 
   let oEventBase = {
     timestamp: new Date().getTime(),
@@ -97,6 +114,7 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
       ...oEventBase,
       type: 'click',
       value: (tgt.value || tgt.textContent || '')
+        .trim()
         .substr(0, 20)
         .replace(/\n/gi, ''),
       frame: ifrSelector,
@@ -107,6 +125,7 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
       ...oEventBase,
       type: 'dblclick',
       value: (tgt.value || tgt.textContent || '')
+        .trim()
         .substr(0, 20)
         .replace(/\n/gi, ''),
       frame: ifrSelector,
@@ -117,6 +136,7 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
       ...oEventBase,
       type: 'contextmenu',
       value: (tgt.value || tgt.textContent || '')
+        .trim()
         .substr(0, 20)
         .replace(/\n/gi, ''),
       frame: ifrSelector,
@@ -143,6 +163,7 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
         ...oEventBase,
         type: 'mouseover',
         value: (tgt.value || tgt.textContent || '')
+          .trim()
           .substr(0, 20)
           .replace(/\n/gi, ''),
         frame: ifrSelector,
