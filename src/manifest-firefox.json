@@ -4,7 +4,7 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "sequence-recorder@probely.com",
-      "strict_min_version": "42.0"
+      "strict_min_version": "60.0"
     }
   },
   "background": {
