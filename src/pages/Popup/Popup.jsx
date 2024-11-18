@@ -222,6 +222,7 @@ const Popup = (props) => {
         </div>
         <div className="buttons-container">
           {isRecording ? 
+            // eslint-disable-next-line jsx-a11y/anchor-is-valid
             <p><a
               href="#"
               className="App-button"

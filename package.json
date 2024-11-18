@@ -1,6 +1,6 @@
 {
   "name": "probely-record-sequence",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Probely Record login/sequence",
   "license": "MIT",
   "scripts": {
