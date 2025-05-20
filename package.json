@@ -1,7 +1,7 @@
 {
-  "name": "probely-record-sequence",
-  "version": "0.0.4",
-  "description": "Probely Record login/sequence",
+  "name": "snyk-api-and-web-record-sequence",
+  "version": "0.0.6",
+  "description": "Snyk API & Web Record login/sequence",
   "license": "MIT",
   "scripts": {
     "build": "node utils/build.js",

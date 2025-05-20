@@ -1,6 +1,6 @@
 {
-  "name": "Probely Sequence Recorder",
-  "version": "0.0.4",
+  "name": "Snyk API & Web Sequence Recorder",
+  "version": "0.0.5",
   "browser_specific_settings": {
     "gecko": {
       "id": "sequence-recorder@probely.com",

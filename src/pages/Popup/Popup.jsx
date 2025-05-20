@@ -3,7 +3,7 @@ import logo from '../../assets/img/logo_probely.svg';
 import help from '../../assets/img/help.svg';
 import './Popup.css';
 
-const helpURL = 'https://help.probely.com/';
+const helpURL = 'https://help.probely.com/en/articles/5402869-how-to-record-a-sequence-with-probely-s-sequence-recorder-plugin';
 
 const Popup = (props) => {
   // 🔴
@@ -146,7 +146,7 @@ const Popup = (props) => {
       type: "text/plain;charset=utf-8"
      });
     var a = document.createElement('a');
-    a.download = 'probely-recording.json';
+    a.download = 'snyk-api-and-web-recording.json';
     a.rel = 'noopener';
     a.href = URL.createObjectURL(blob);
     try {
@@ -181,7 +181,7 @@ const Popup = (props) => {
       </header>
       <div className="App-container">
         <p>
-        Use this plugin to record a sequence of steps to be followed by Probely during a scan.{' '}
+        Use this plugin to record a sequence of steps to be followed by Snyk API & Web during a scan.{' '}
         When you finish recording, upload the script to your target settings. 
         </p>
         <p className="help-container">
