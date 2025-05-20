@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Probely Sequence Recorder",
+  "name": "Snyk API & Web Sequence Recorder",
   "action": {
     "default_popup": "popup.html",
     "default_icon": {

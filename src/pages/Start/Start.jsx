@@ -6,7 +6,7 @@ const Start = (props) => {
     <div className="App">
       <header className="instructions">
         <div className="header">
-          <img src={logo} alt="probely" />
+          <img src={logo} alt="Snyk API & Web" />
           <h1>Sequence Recorder</h1>
         </div>
       </header>
