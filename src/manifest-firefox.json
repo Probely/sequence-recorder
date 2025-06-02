@@ -1,6 +1,6 @@
 {
   "name": "Snyk API & Web Sequence Recorder",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "browser_specific_settings": {
     "gecko": {
       "id": "sequence-recorder@probely.com",
@@ -32,7 +32,9 @@
       "css": [
         "content.styles.css"
       ],
-      "run_at": "document_start"
+      "run_at": "document_start",
+      "all_frames": true,
+      "match_about_blank": true
     }
   ],
   "web_accessible_resources": [
