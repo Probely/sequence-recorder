@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Probely Sequence Recorder",
+  "name": "Snyk API & Web Sequence Recorder",
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
@@ -26,7 +26,9 @@
       "css": [
         "content.styles.css"
       ],
-      "run_at": "document_start"
+      "run_at": "document_start",
+      "all_frames": true,
+      "match_about_blank": true
     }
   ],
   "web_accessible_resources": [

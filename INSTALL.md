@@ -1,4 +1,4 @@
-# Probely - Recorder login/sequence browser extension
+# Snyk API&Web - Recorder login/sequence browser extension
 
 ## How to test
 
@@ -33,7 +33,7 @@ Follow the steps below to install and test the extension in dev mode
 ### Step 4:
 
 - Click on the chrome extensions icon [1]
-- Pin the "**Probely Recorder**" extension [2]
+- Pin the "**Snyk API&Web Recorder**" extension [2]
 
 ![](./readme_assets/03-pin_extension-notes.png '...')
 
