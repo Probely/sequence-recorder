@@ -103,7 +103,7 @@ const Review = (props) => {
       return;
     }
     const a = document.createElement('a');
-    a.download = 'probely-recording.json';
+    a.download = 'snyk-api-and-web-recording.json';
     a.rel = 'noopener';
     a.href = URL.createObjectURL(blob);
     try {
@@ -255,7 +255,7 @@ const Review = (props) => {
     <div className="App">
       <header className="instructions">
         <div className="header">
-          <img src={logo} alt="probely" />
+          <img src={logo} alt="Snyk API & Web" />
           <h1>Sequence Recorder</h1>
         </div>
       </header>
@@ -285,7 +285,7 @@ const Review = (props) => {
               onChange={(ev) => { onChangeReviewAdvanced(ev); }}
             /><label htmlFor="review_advanced_options" className="review_advanced_options_text">Advanced options</label>
           </div>
-          <p>After saving your sequence, make sure to import it to your target settings at Probely, so it is followed during scans.</p>
+          <p>After saving your sequence, make sure to import it to your target settings at Snyk API & Web, so it is followed during scans.</p>
         </>
         : <h3><strong>No data has been recorded</strong></h3>}
         <div className="copy-status-container">

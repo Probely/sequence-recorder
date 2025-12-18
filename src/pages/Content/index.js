@@ -33,7 +33,7 @@ import getCustomSelector from './modules/getCustomSelector';
 
   if (chrome) {
     chrome.storage.sync.get(['isRecording'], (data) => {
-      // console.log('IS CONTENT STRING RECORDING ???? => ', data);
+      // console.log('IS CONTENT SCRIPT RECORDING ???? => ', data);
       if (!data.isRecording) {
         return;
       }
@@ -41,28 +41,93 @@ import getCustomSelector from './modules/getCustomSelector';
       let mutationDetected = false;
       let stoMutation = null;
 
+      // wait for messages from iframes in the top frame
+      if (window === window.top) {
+        window.addEventListener('message', (evMsg) => {
+          if (
+            evMsg.data &&
+            evMsg.data.source &&
+            evMsg.data.source === 'event-from-iframe'
+          ) {
+            const obj = { ...evMsg.data.obj };
+            const aFrames = document.querySelectorAll('iframe, frame');
+            for (const frame of aFrames) {
+              if (frame.contentWindow === evMsg.source) {
+                let frameSelector = null;
+                try {
+                  frameSelector = getCustomSelector(frame);
+                } catch (ex) {
+                  // ignore
+                }
+                if (!frameSelector) {
+                  try {
+                    frameSelector = getNodeSelector(frame, {
+                      root: window.document,
+                      idName: (name) => {
+                        return !/^[0-9]+.*/i.test(name);
+                      },
+                      className: (name) => {
+                        return (
+                          !name.includes('focus') &&
+                          !name.includes('highlight') &&
+                          !/^[0-9]+.*/i.test(name)
+                        );
+                      },
+                      // seedMinLength: 3,
+                      // optimizedMinLength: 3,
+                    });
+                  } catch (ex) {
+                    // ignore
+                  }
+                }
+                if (frameSelector && obj.event) {
+                  obj.event.frame = frameSelector;
+                  chrome.runtime.sendMessage(obj);
+                }
+                break;
+              }
+            }
+          }
+        });
+      }
+
       function eventInterceptopMainHandler(ev) {
         if (ev && ev.type === 'mouseover' && !mutationDetected) {
           return;
         }
         interceptEvents(ev, window.document, null, (obj) => {
-          chrome.runtime.sendMessage(obj);
+          if (window !== window.top) {
+            // If the event is inside a frame, send it to the top
+            window.parent.postMessage(
+              {
+                source: 'event-from-iframe',
+                obj: { ...obj },
+              },
+              '*'
+            );
+          } else {
+            // if in the top frame, send to background
+            chrome.runtime.sendMessage(obj);
+          }
         });
       }
       if (data.isRecording) {
         isRecording = true;
         originalTitle = document.title;
         changePageTitle();
-        chrome.runtime.sendMessage({
-          messageType: 'events',
-          event: {
-            type: 'goto',
-            timestamp: new Date().getTime(),
-            windowWidth: window.innerWidth,
-            windowHeight: window.innerHeight,
-            url: window.location.href,
-          },
-        });
+        if (window === window.top) {
+          // save "goto" only on top frames
+          chrome.runtime.sendMessage({
+            messageType: 'events',
+            event: {
+              type: 'goto',
+              timestamp: new Date().getTime(),
+              windowWidth: window.innerWidth,
+              windowHeight: window.innerHeight,
+              url: window.location.href,
+            },
+          });
+        }
         // Leaving this, maybe I need in the future
         // window.addEventListener('load', (ev) => {
         //   addMutationObserver(document);
@@ -95,103 +160,6 @@ import getCustomSelector from './modules/getCustomSelector';
         // document.addEventListener('paste', eventInterceptopMainHandler, true);
       }
 
-      function addEventsToIframe(ifr, force) {
-        let ifrSelector = null;
-        try {
-          ifrSelector = getCustomSelector(ifr, window.document);
-        } catch (ex) {
-          // ignore
-        }
-        if (!ifrSelector) {
-          ifrSelector = getNodeSelector(ifr, {
-            root: window.document,
-            seedMinLength: 3,
-            optimizedMinLength: 3,
-          });
-        }
-        function eventInterceptopFrameHandler(ev) {
-          interceptEvents(
-            ev,
-            ifr.contentWindow.document,
-            ifrSelector,
-            (obj) => {
-              chrome.runtime.sendMessage(obj);
-            }
-          );
-        }
-        const iframeAddEventsCollector = () => {
-          try {
-            if (data.isRecording) {
-              // Leaving this here, maybe Ill need it in the future
-              // ifr.contentWindow.addEventListener('load', (ev) => {
-              //   addMutationObserver(ifr.contentWindow.document);
-              // });
-              if (ifr.contentWindow.____probely_sequence_recorder) {
-                return;
-              }
-              ifr.contentWindow.____probely_sequence_recorder = true;
-
-              ifr.contentWindow.document.addEventListener(
-                'click',
-                eventInterceptopFrameHandler,
-                true
-              );
-              ifr.contentWindow.document.addEventListener(
-                'mouseover',
-                eventInterceptopFrameHandler,
-                true
-              );
-              ifr.contentWindow.document.addEventListener(
-                'dblclick',
-                eventInterceptopFrameHandler,
-                true
-              );
-              ifr.contentWindow.document.addEventListener(
-                'contextmenu',
-                eventInterceptopFrameHandler,
-                true
-              );
-              ifr.contentWindow.document.addEventListener(
-                'keydown',
-                eventInterceptopFrameHandler,
-                true
-              );
-              ifr.contentWindow.document.addEventListener(
-                'blur',
-                eventInterceptopFrameHandler,
-                true
-              );
-              ifr.contentWindow.document.addEventListener(
-                'change',
-                eventInterceptopFrameHandler,
-                true
-              );
-            }
-          } catch (ex) {
-            // ignore - doesn't have access
-          }
-        };
-        if (force) {
-          iframeAddEventsCollector();
-        } else {
-          ifr.addEventListener('load', iframeAddEventsCollector);
-        }
-      }
-
-      const aIfrs = document.querySelectorAll('iframe, frame');
-      aIfrs.forEach((ifr) => {
-        addEventsToIframe(ifr);
-        setTimeout(() => {
-          try {
-            if (!ifr.contentWindow.____probely_sequence_recorder) {
-              addEventsToIframe(ifr, true);
-            }
-          } catch (ex) {
-            // ignore
-          }
-        }, 2000);
-      });
-
       const mutationConfig = {
         attributes: false,
         childList: true,
@@ -207,44 +175,11 @@ import getCustomSelector from './modules/getCustomSelector';
           // keep "mutationDetected" enabled within 200ms
           mutationDetected = false;
         }, 200);
-        for (const mutation of mutationsList) {
-          for (let i = 0; i < mutation.addedNodes.length; i++) {
-            const mutationNode = mutation.addedNodes[i];
-            if (
-              mutationNode &&
-              mutationNode.nodeType === 1 &&
-              mutationNode.querySelectorAll
-            ) {
-              let aIfrsMut = [];
-              if (
-                mutationNode &&
-                mutationNode.nodeName &&
-                ['iframe', 'frame'].indexOf(
-                  mutationNode.nodeName.toLowerCase()
-                ) > -1
-              ) {
-                aIfrsMut = [mutationNode];
-              } else {
-                aIfrsMut = mutationNode.querySelectorAll('iframe, frame');
-              }
-              aIfrsMut.forEach((ifr) => {
-                addEventsToIframe(ifr);
-                setTimeout(() => {
-                  try {
-                    if (!ifr.contentWindow.____probely_sequence_recorder) {
-                      addEventsToIframe(ifr, true);
-                    }
-                  } catch (ex) {
-                    // ignore
-                  }
-                }, 2000);
-              });
-            }
-          }
-        }
       };
       const observer = new MutationObserver(onMutationCallback);
-      observer.observe(document.body, mutationConfig);
+      if (document.body) {
+        observer.observe(document.body, mutationConfig);
+      }
     });
   }
 })();

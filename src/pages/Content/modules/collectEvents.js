@@ -22,7 +22,22 @@ let stoMouseover = false;
 
 export function interceptEvents(event, doc, ifrSelector, callback) {
   let hasKeyReturn = false;
-  const tgt = event.target;
+  let tgt = null;
+  let composedPath = null;
+  if (event && event.composed && event.composedPath) {
+    composedPath = event.composedPath();
+  }
+  let shadowRootIdx = -1;
+  if (composedPath && composedPath.length > 0) {
+    shadowRootIdx = composedPath.findIndex(
+      (item) => item instanceof ShadowRoot
+    );
+  }
+  if (shadowRootIdx > -1) {
+    tgt = composedPath[0];
+  } else {
+    tgt = event.target;
+  }
   const type = event.type;
   let nodeName = null;
   let nodeType = null;
@@ -74,12 +89,20 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
   if (selector && selector.toLowerCase() === 'html') {
     return;
   }
-  const xpath = getXPath(bestElm, doc);
+  let xpath = null;
+  try {
+    xpath = getXPath(bestElm, doc);
+  } catch (ex) {
+    // ignore
+  }
+  if (shadowRootIdx > -1) {
+    xpath = '/html/node/shadow';
+  }
 
   let oEventBase = {
     timestamp: new Date().getTime(),
     css: selector || tgt,
-    xpath: xpath,
+    xpath: xpath || '',
   };
 
   let oEventToSend = {};
