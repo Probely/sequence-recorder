@@ -27,3 +27,6 @@ test-build.pem
 test-build.zip
 test-build-firefox.zip
 /readme_assets/*-clear.png
+
+.windsurf/rules/snyk_rules.md
+/zip
