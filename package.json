@@ -1,6 +1,6 @@
 {
   "name": "snyk-api-and-web-record-sequence",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Snyk API & Web Record login/sequence",
   "license": "MIT",
   "scripts": {

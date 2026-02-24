@@ -133,15 +133,64 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
         return;
       }
     }
+    let typeStr = 'click';
+    if (nodeName === 'canvas') {
+      const rect = tgt.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      const width = rect.width;
+      const height = rect.height;
+
+      const clickData = { x, y, width, height };
+      oEventBase = { ...oEventBase, coords: clickData };
+
+      typeStr = 'bclick';
+    }
     oEventToSend = {
       ...oEventBase,
-      type: 'click',
+      type: typeStr,
       value: (tgt.value || tgt.textContent || '')
         .trim()
         .substr(0, 20)
         .replace(/\n/gi, ''),
       frame: ifrSelector,
     };
+
+    // Add shadow host CSS selector for bclick events inside shadow DOM
+    if (typeStr === 'bclick' && shadowRootIdx > -1 && composedPath) {
+      const shadowRoot = composedPath[shadowRootIdx];
+      const shadowHost = shadowRoot.host;
+      if (shadowHost) {
+        let shadowHostSelector = null;
+        try {
+          shadowHostSelector = getCustomSelector(shadowHost, doc);
+        } catch (ex) {
+          // ignore
+        }
+        if (!shadowHostSelector) {
+          try {
+            shadowHostSelector = getNodeSelector(shadowHost, {
+              root: doc,
+              idName: (name) => {
+                return !/^[0-9]+.*/i.test(name);
+              },
+              className: (name) => {
+                return (
+                  !name.includes('focus') &&
+                  !name.includes('highlight') &&
+                  !/^[0-9]+.*/i.test(name)
+                );
+              },
+            });
+          } catch (ex) {
+            // ignore
+          }
+        }
+        if (shadowHostSelector) {
+          oEventToSend.shadow_host_css = shadowHostSelector;
+        }
+      }
+    }
   } else if (type === 'dblclick') {
     lastNodes.dblclick = tgt;
     oEventToSend = {
