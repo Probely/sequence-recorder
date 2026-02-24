@@ -244,6 +244,10 @@ const Review = (props) => {
       case 'goto':
         newType = 'go to';
         break;
+      case 'click':
+      case 'bclick':
+        newType = 'click';
+        break;
       default:
         newType = type;
         break;

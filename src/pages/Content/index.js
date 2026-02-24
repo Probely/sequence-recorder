@@ -49,8 +49,21 @@ import getCustomSelector from './modules/getCustomSelector';
             evMsg.data.source &&
             evMsg.data.source === 'event-from-iframe'
           ) {
-            const obj = { ...evMsg.data.obj };
+            // Verify the message actually came from a child iframe
             const aFrames = document.querySelectorAll('iframe, frame');
+            let isFromChildFrame = false;
+            for (const frame of aFrames) {
+              if (frame.contentWindow === evMsg.source) {
+                isFromChildFrame = true;
+                break;
+              }
+            }
+            if (!isFromChildFrame) {
+              return; // Message didn't come from any of our iframes
+            }
+
+            const obj = { ...evMsg.data.obj };
+            const framePath = evMsg.data.framePath || [];
             for (const frame of aFrames) {
               if (frame.contentWindow === evMsg.source) {
                 let frameSelector = null;
@@ -81,9 +94,83 @@ import getCustomSelector from './modules/getCustomSelector';
                   }
                 }
                 if (frameSelector && obj.event) {
-                  obj.event.frame = frameSelector;
+                  // Build the complete frame path: [outermost, ..., innermost]
+                  const completeFramePath = [frameSelector, ...framePath];
+                  obj.event.frame = completeFramePath.join(' >>> ');
                   chrome.runtime.sendMessage(obj);
                 }
+                break;
+              }
+            }
+          }
+        });
+      }
+
+      // intermediate frames: listen for messages from child iframes and forward to parent
+      if (window !== window.top) {
+        window.addEventListener('message', (evMsg) => {
+          if (
+            evMsg.data &&
+            evMsg.data.source &&
+            evMsg.data.source === 'event-from-iframe'
+          ) {
+            // Verify the message actually came from a child iframe
+            const aFrames = document.querySelectorAll('iframe, frame');
+            let isFromChildFrame = false;
+            for (const frame of aFrames) {
+              if (frame.contentWindow === evMsg.source) {
+                isFromChildFrame = true;
+                break;
+              }
+            }
+            if (!isFromChildFrame) {
+              return; // Message didn't come from any of our iframes
+            }
+
+            // This is an intermediate frame - find the child iframe and add to path
+            const framePath = evMsg.data.framePath || [];
+
+            for (const frame of aFrames) {
+              if (frame.contentWindow === evMsg.source) {
+                let frameSelector = null;
+                try {
+                  frameSelector = getCustomSelector(frame);
+                } catch (ex) {
+                  // ignore
+                }
+                if (!frameSelector) {
+                  try {
+                    frameSelector = getNodeSelector(frame, {
+                      root: window.document,
+                      idName: (name) => {
+                        return !/^[0-9]+.*/i.test(name);
+                      },
+                      className: (name) => {
+                        return (
+                          !name.includes('focus') &&
+                          !name.includes('highlight') &&
+                          !/^[0-9]+.*/i.test(name)
+                        );
+                      },
+                    });
+                  } catch (ex) {
+                    // ignore
+                  }
+                }
+
+                // Forward to parent with this frame's selector added to path
+                if (frameSelector) {
+                  framePath.push(frameSelector);
+                }
+
+                window.parent.postMessage(
+                  {
+                    source: 'event-from-iframe',
+                    obj: evMsg.data.obj,
+                    framePath: framePath,
+                  },
+                  '*'
+                );
                 break;
               }
             }
@@ -97,11 +184,12 @@ import getCustomSelector from './modules/getCustomSelector';
         }
         interceptEvents(ev, window.document, null, (obj) => {
           if (window !== window.top) {
-            // If the event is inside a frame, send it to the top
+            // If the event is inside a frame, send it to the parent
             window.parent.postMessage(
               {
                 source: 'event-from-iframe',
                 obj: { ...obj },
+                framePath: [], // Start with empty path, will be built as message bubbles up
               },
               '*'
             );
