@@ -3,7 +3,7 @@ import logo from '../../assets/img/logo_probely.svg';
 import help from '../../assets/img/help.svg';
 import './Popup.css';
 
-const helpURL = 'https://help.probely.com/en/articles/5402869-how-to-record-a-sequence-with-probely-s-sequence-recorder-plugin';
+const helpURL = 'https://docs.snyk.io/scan-fix-and-prevent/scan-with-snyk/snyk-api-web/configure-targets/configure-web-targets/use-sequence-recorder';
 
 const Popup = (props) => {
   // 🔴
@@ -11,22 +11,22 @@ const Popup = (props) => {
   const [isRecording, setIsRecording] = useState(false);
   const [startURL, setStartURL] = useState('');
   const [recordingData, setRecordingData] = useState([]);
-  const [copyStatus, setCopyStatus] = useState({status: false, error: false, msg: 'Successfully copied to clipboard'});
+  const [copyStatus, setCopyStatus] = useState({ status: false, error: false, msg: 'Successfully copied to clipboard' });
 
   useEffect(() => {
     if (chrome && chrome.storage) {
       chrome.storage.sync.get(['isRecording'], (data) => {
         const recording = data.isRecording;
-        if(recording) {
+        if (recording) {
           setIsRecording(true);
           (chrome.action || chrome.browserAction).setBadgeText({
             text: '🔴',
-          }, () => {});
+          }, () => { });
         } else {
           setIsRecording(false);
           (chrome.action || chrome.browserAction).setBadgeText({
             text: '',
-          }, () => {});
+          }, () => { });
         }
       });
       chrome.runtime.onMessage.addListener((data, sender, sendResponse) => {
@@ -51,8 +51,8 @@ const Popup = (props) => {
       if (chrome) {
         (chrome.action || chrome.browserAction).setBadgeText({
           text: '🔴',
-        }, () => {});
-        chrome.storage.sync.set({isRecording: true}, () => {
+        }, () => { });
+        chrome.storage.sync.set({ isRecording: true }, () => {
           chrome.runtime.sendMessage({
             messageType: 'start',
             event: {
@@ -63,7 +63,7 @@ const Popup = (props) => {
               url: startURL,
             },
           });
-          chrome.tabs.create({active: true, url: startURL}, (aa) => {
+          chrome.tabs.create({ active: true, url: startURL }, (aa) => {
           });
         });
       }
@@ -74,15 +74,15 @@ const Popup = (props) => {
       if (chrome) {
         (chrome.action || chrome.browserAction).setBadgeText({
           text: '',
-        }, () => {});
-        chrome.storage.sync.set({isRecording: false}, () => {
+        }, () => { });
+        chrome.storage.sync.set({ isRecording: false }, () => {
           askForRecordingData();
 
-          chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+          chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             if (tabs && tabs.length) {
               const curTab = tabs[0];
               chrome.tabs.remove(curTab.id);
-              chrome.tabs.create({active: true, url: './review.html'}, (aa) => {
+              chrome.tabs.create({ active: true, url: './review.html' }, (aa) => {
               });
             }
           });
@@ -126,7 +126,7 @@ const Popup = (props) => {
           msg: 'Successfully copied to clipboard'
         });
         setTimeout(() => {
-          setCopyStatus({status: false, error: false, msg: ''});
+          setCopyStatus({ status: false, error: false, msg: '' });
         }, 3000);
       } else {
         setCopyStatus({
@@ -135,7 +135,7 @@ const Popup = (props) => {
           msg: 'Error on copy to clipboard'
         });
         setTimeout(() => {
-          setCopyStatus({status: false, error: false, msg: ''});
+          setCopyStatus({ status: false, error: false, msg: '' });
         }, 5000);
       }
     }
@@ -144,7 +144,7 @@ const Popup = (props) => {
   function onClickDownload() {
     var blob = new Blob([JSON.stringify(recordingData, null, 2)], {
       type: "text/plain;charset=utf-8"
-     });
+    });
     var a = document.createElement('a');
     a.download = 'snyk-api-and-web-recording.json';
     a.rel = 'noopener';
@@ -169,7 +169,7 @@ const Popup = (props) => {
 
   function onClickHelpLink(ev) {
     ev.preventDefault();
-    chrome.tabs.create({active: true, url: helpURL}, (aa) => {
+    chrome.tabs.create({ active: true, url: helpURL }, (aa) => {
     });
   }
 
@@ -181,8 +181,8 @@ const Popup = (props) => {
       </header>
       <div className="App-container">
         <p>
-        Use this plugin to record a sequence of steps to be followed by Snyk API & Web during a scan.{' '}
-        When you finish recording, upload the script to your target settings. 
+          Use this plugin to record a sequence of steps to be followed by Snyk API & Web during a scan.{' '}
+          When you finish recording, upload the script to your target settings.
         </p>
         <p className="help-container">
           <a
@@ -202,7 +202,7 @@ const Popup = (props) => {
         <div className="input-url-container">
           {isRecording ?
             null
-          :
+            :
             <>
               <label className="start_url_label" htmlFor="start_url">Type the start URL to be recorded</label>
               <input
@@ -221,14 +221,14 @@ const Popup = (props) => {
           }
         </div>
         <div className="buttons-container">
-          {isRecording ? 
+          {isRecording ?
             // eslint-disable-next-line jsx-a11y/anchor-is-valid
             <p><a
               href="#"
               className="App-button"
               onClick={(ev) => { onClickStartStopRecording(ev, false); }}
             >Stop recording</a></p>
-          : 
+            :
             <button
               type="submit"
               className="App-button"
@@ -260,15 +260,15 @@ const Popup = (props) => {
             >Clear recording data</button>
           </div>
         </>
-      : null}
+        : null}
       <div className="copy-status-container">
         {copyStatus.status ?
-        <div className={copyStatus.error ? 'copy-status error' : 'copy-status success'}>{copyStatus.msg}</div>
-        : null}
+          <div className={copyStatus.error ? 'copy-status error' : 'copy-status success'}>{copyStatus.msg}</div>
+          : null}
       </div>
-      {recordingData.length ? 
+      {recordingData.length ?
         <textarea id="input-copy-to-clipboard" defaultValue={JSON.stringify(recordingData, null, 2)}></textarea>
-      : null}
+        : null}
     </div>
   );
 };

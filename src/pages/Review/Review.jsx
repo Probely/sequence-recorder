@@ -8,7 +8,7 @@ const Review = (props) => {
   const [recordingDataOriginal, setRecordingDataOriginal] = useState([]);
   const [recordingData, setRecordingData] = useState([]);
   const [recordingDataDownload, setRecordingDataDownload] = useState([]);
-  const [copyStatus, setCopyStatus] = useState({status: false, error: false, msg: 'Successfully copied to clipboard'});
+  const [copyStatus, setCopyStatus] = useState({ status: false, error: false, msg: 'Successfully copied to clipboard' });
   const [showAdvanced, setShowAdvanced] = useState(true);
 
   useEffect(() => {
@@ -66,7 +66,7 @@ const Review = (props) => {
           msg: 'Successfully copied to clipboard'
         });
         setTimeout(() => {
-          setCopyStatus({status: false, error: false, msg: ''});
+          setCopyStatus({ status: false, error: false, msg: '' });
         }, 3000);
       } else {
         setCopyStatus({
@@ -75,7 +75,7 @@ const Review = (props) => {
           msg: 'Error on copy to clipboard'
         });
         setTimeout(() => {
-          setCopyStatus({status: false, error: false, msg: ''});
+          setCopyStatus({ status: false, error: false, msg: '' });
         }, 5000);
       }
     }
@@ -148,7 +148,7 @@ const Review = (props) => {
   }
 
   function onChangeTableUrlType(ev, idx) {
-    
+
     const tgt = ev.target;
     const tmp = JSON.parse(JSON.stringify(recordingData));
     const val = tgt.value;
@@ -156,7 +156,7 @@ const Review = (props) => {
     // if (idx === 0 && val !== 'force' && val !== 'loggedin_start_url') {
     //   return;
     // }
-    
+
     // For now only allow "force" and "ignore"
     if (idx === 0 && val !== 'force') {
       return;
@@ -236,6 +236,7 @@ const Review = (props) => {
     let newType = type;
     switch (type) {
       case 'fill_value':
+      case 'bfill_value':
         newType = 'fill with value';
         break;
       case 'press_key':
@@ -265,59 +266,59 @@ const Review = (props) => {
       </header>
       <div className="main">
         {recordingData && recordingData.length ?
-        <>
-          <p>You can copy or download the recorded information here or through the plugin window.</p>
-          <div className="buttons-container">
-            <button
-              type="button"
-              className="App-button"
-              onClick={() => { onClickCopyToClipboard(); }}
-            >Copy to clipboard</button>
-            <button
-              type="button"
-              className="App-button"
-              onClick={() => { onClickDownload(); }}
-            >Download</button>
-          </div>
-          <div className="advance_check_container">
-            <input
-              type="checkbox"
-              id="review_advanced_options"
-              value="1"
-              className="form-control input_custom"
-              checked={showAdvanced}
-              onChange={(ev) => { onChangeReviewAdvanced(ev); }}
-            /><label htmlFor="review_advanced_options" className="review_advanced_options_text">Advanced options</label>
-          </div>
-          <p>After saving your sequence, make sure to import it to your target settings at Snyk API & Web, so it is followed during scans.</p>
-        </>
-        : <h3><strong>No data has been recorded</strong></h3>}
+          <>
+            <p>You can copy or download the recorded information here or through the plugin window.</p>
+            <div className="buttons-container">
+              <button
+                type="button"
+                className="App-button"
+                onClick={() => { onClickCopyToClipboard(); }}
+              >Copy to clipboard</button>
+              <button
+                type="button"
+                className="App-button"
+                onClick={() => { onClickDownload(); }}
+              >Download</button>
+            </div>
+            <div className="advance_check_container">
+              <input
+                type="checkbox"
+                id="review_advanced_options"
+                value="1"
+                className="form-control input_custom"
+                checked={showAdvanced}
+                onChange={(ev) => { onChangeReviewAdvanced(ev); }}
+              /><label htmlFor="review_advanced_options" className="review_advanced_options_text">Advanced options</label>
+            </div>
+            <p>After saving your sequence, make sure to import it to your target settings at Snyk API & Web, so it is followed during scans.</p>
+          </>
+          : <h3><strong>No data has been recorded</strong></h3>}
         <div className="copy-status-container">
           {copyStatus.status ?
-          <div className={copyStatus.error ? 'copy-status error' : 'copy-status success'}>{copyStatus.msg}</div>
-          : null}
+            <div className={copyStatus.error ? 'copy-status error' : 'copy-status success'}>{copyStatus.msg}</div>
+            : null}
         </div>
         {recordingData && recordingData.length && showAdvanced ?
           <>
             <div className="advanced_instructions">
               <p className="center">You can review the steps recorded below.{' '}
-              Note that changing the sequence in any way could prevent the crawler from successfully replaying it.</p>
+                Note that changing the sequence in any way could prevent the crawler from successfully replaying it.</p>
               <p>Some tips:</p>
               <ul>
                 <li>You can edit the CSS selectors (click on the CSS selector) to adjust some possible variable selectors.{' '}
-                For instance for the selector "<code><b>#foo &gt; .nav-item.item_42</b></code>" where "42" is an ID,{' '}
-                using "<code><b>.item_42</b></code>" is not recomended.
+                  For instance for the selector "<code><b>#foo &gt; .nav-item.item_42</b></code>" where "42" is an ID,{' '}
+                  using "<code><b>.item_42</b></code>" is not recomended.
                 </li>
-                <li>You can edit "<b>fill with value</b>" values (click on the text value) to use random values. 
+                <li>You can edit "<b>fill with value</b>" values (click on the text value) to use random values.
                   For instance, in a registration form where the email needs to be unique,{' '}
                   you can use the value <code>email+<b>&#123;RAND_STRING&#125;</b>@example.com</code>.<br />
-                  Possible values: 
-                    <ul>
-                      <li><code><b>&#123;RAND_STRING&#125;</b></code> - random string</li>
-                      <li><code><b>&#123;RAND_STRING[5]&#125;</b></code> - random string with length X (e.g. 5)</li>
-                      <li><code><b>&#123;RAND_NUMBER&#125;</b></code> - random number</li>
-                      <li><code><b>&#123;RAND_NUMBER[10-99]&#125;</b></code> - random number between X and Y (e.g. 10 and 99)</li>
-                    </ul>
+                  Possible values:
+                  <ul>
+                    <li><code><b>&#123;RAND_STRING&#125;</b></code> - random string</li>
+                    <li><code><b>&#123;RAND_STRING[5]&#125;</b></code> - random string with length X (e.g. 5)</li>
+                    <li><code><b>&#123;RAND_NUMBER&#125;</b></code> - random number</li>
+                    <li><code><b>&#123;RAND_NUMBER[10-99]&#125;</b></code> - random number between X and Y (e.g. 10 and 99)</li>
+                  </ul>
                 </li>
                 {/* <li>
                   For "<b>go to</b>" items, you can define if the URL needs to be checked or forced.
@@ -342,7 +343,7 @@ const Review = (props) => {
               <tbody>
                 {recordingData.map((item, idx) => {
                   return (
-                    <tr className={`table_tr ${idx % 2 === 0 ? 'odd' : 'even'}`} key={`item_${idx}`}> 
+                    <tr className={`table_tr ${idx % 2 === 0 ? 'odd' : 'even'}`} key={`item_${idx}`}>
                       <td>
                         <input
                           type="checkbox"
@@ -362,54 +363,54 @@ const Review = (props) => {
                           <form
                             method="post"
                             action=""
-                            onSubmit={(ev) => {onSubmitEdit(ev, idx, 'css');}}
+                            onSubmit={(ev) => { onSubmitEdit(ev, idx, 'css'); }}
                           >
                             <input
                               type="text"
                               className="t_selector_input"
                               value={item.css}
-                              onChange={(ev) => {onChangeEdit(ev, idx, 'css');}}
+                              onChange={(ev) => { onChangeEdit(ev, idx, 'css'); }}
                             />
                             <button type="submit" className="t_btn_ok">Save</button>
                             <button
                               type="button"
                               className="t_btn_cancel"
-                              onClick={(ev) => {onClickCancelEdit(ev,idx, 'css');}}
+                              onClick={(ev) => { onClickCancelEdit(ev, idx, 'css'); }}
                             >Cancel</button>
                           </form>
                           :
                           <span
                             className="t_selector"
-                            onClick={(ev) => {onClickEdit(ev, idx, 'css');}}
+                            onClick={(ev) => { onClickEdit(ev, idx, 'css'); }}
                           >{item.css}</span>
                       )}</td>
                       <td>
-                        {item.type === 'fill_value' ? 
+                        {item.type === 'fill_value' || item.type === 'bfill_value' ?
                           item.opt.fillValueEditMode ?
                             <form
                               method="post"
                               action=""
-                              onSubmit={(ev) => {onSubmitEdit(ev, idx, 'fill_value');}}
+                              onSubmit={(ev) => { onSubmitEdit(ev, idx, 'fill_value'); }}
                             >
                               <input
                                 type="text"
                                 className="t_fill_value_input"
                                 value={item.value}
-                                onChange={(ev) => {onChangeEdit(ev, idx, 'fill_value');}}
+                                onChange={(ev) => { onChangeEdit(ev, idx, 'fill_value'); }}
                               />
                               <button type="submit" className="t_btn_ok">Save</button>
                               <button
                                 type="button"
                                 className="t_btn_cancel"
-                                onClick={(ev) => {onClickCancelEdit(ev,idx, 'fill_value');}}
+                                onClick={(ev) => { onClickCancelEdit(ev, idx, 'fill_value'); }}
                               >Cancel</button>
                             </form>
-                          :
-                          <span
-                            className="t_selector"
-                            onClick={(ev) => {onClickEdit(ev, idx, 'fill_value');}}
-                          >{item.value}</span>
-                        : null}
+                            :
+                            <span
+                              className="t_selector"
+                              onClick={(ev) => { onClickEdit(ev, idx, 'fill_value'); }}
+                            >{item.value}</span>
+                          : null}
                         {item.type === 'change' && item.subtype === 'check' ? item.checked ? 'checked' : 'not checked' : null}
                         {item.type === 'change' && item.subtype === 'select' ? `index ${item.selected}` : null}
                         {item.type === 'goto' ? (
@@ -442,23 +443,23 @@ const Review = (props) => {
                           // </select>
                         ) : null}
                       </td>
-                    </tr>    
+                    </tr>
                   )
                 })}
               </tbody>
             </table>
           </>
-        : null}
+          : null}
       </div>
       <div>
       </div>
-      {recordingData.length ? 
+      {recordingData.length ?
         <textarea
           id="input-copy-to-clipboard"
           readOnly
           value={JSON.stringify(recordingDataDownload, null, 2)}
         ></textarea>
-      : null}
+        : null}
     </div>
   );
 };

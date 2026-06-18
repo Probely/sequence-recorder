@@ -19,6 +19,59 @@ const lastNodes = {
 };
 
 let stoMouseover = false;
+let pendingInput = null;
+let flushedInput = null;
+const keystrokeBuffers = new WeakMap();
+
+function getEffectiveValue(element) {
+  const domValue = element.value;
+  if (domValue && domValue.trim()) {
+    return domValue;
+  }
+  return keystrokeBuffers.get(element) || domValue;
+}
+
+function isBufferedValue(element) {
+  const domValue = element.value;
+  return !(domValue && domValue.trim()) && keystrokeBuffers.has(element);
+}
+
+function isCanvasSurface(element) {
+  if (element.nodeName.toLowerCase() === 'canvas') return true;
+  if (element.shadowRoot) {
+    try {
+      if (element.shadowRoot.querySelector('canvas')) return true;
+    } catch (ex) { /* ignore */ }
+  }
+  for (const child of element.children || []) {
+    if (child.shadowRoot) {
+      try {
+        if (child.shadowRoot.querySelector('canvas')) return true;
+      } catch (ex) { /* ignore */ }
+    }
+  }
+  return false;
+}
+
+function getStableInputSelector(element, doc) {
+  const dynamicPatterns = ['focus', 'highlight', 'editable', 'caret'];
+  const classes = Array.from(element.classList || []).filter((cls) => {
+    const lower = cls.toLowerCase();
+    return !dynamicPatterns.some((p) => lower.includes(p)) && !/^[0-9]/.test(cls);
+  });
+  for (const cls of classes) {
+    const sel = '.' + cls;
+    try {
+      const matches = doc.querySelectorAll(sel);
+      if (matches.length === 1 && matches[0] === element) {
+        return sel;
+      }
+    } catch (ex) {
+      // ignore
+    }
+  }
+  return null;
+}
 
 export function interceptEvents(event, doc, ifrSelector, callback) {
   let hasKeyReturn = false;
@@ -110,6 +163,26 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
   if (type === 'click') {
     lastNodes.click = tgt;
 
+    if (pendingInput && pendingInput.element !== tgt && callback) {
+      const useBuffer = isBufferedValue(pendingInput.element);
+      const fillEvent = {
+        ...pendingInput.oEventBase,
+        type: useBuffer ? 'bfill_value' : 'fill_value',
+        value: getEffectiveValue(pendingInput.element),
+        frame: pendingInput.frame,
+      };
+      if (useBuffer) {
+        const stableSel = getStableInputSelector(pendingInput.element, doc);
+        if (stableSel) {
+          fillEvent.css = stableSel;
+        }
+      }
+      callback({ messageType: 'events', event: { ...fillEvent } });
+      keystrokeBuffers.delete(pendingInput.element);
+      flushedInput = pendingInput.element;
+      pendingInput = null;
+    }
+
     if (
       lastNodes.return === lastNodes.change &&
       tgt !== lastNodes.return &&
@@ -134,7 +207,7 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
       }
     }
     let typeStr = 'click';
-    if (nodeName === 'canvas') {
+    if (isCanvasSurface(tgt)) {
       const rect = tgt.getBoundingClientRect();
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
@@ -261,6 +334,16 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
     lastNodes.keydown = tgt;
     if (['input', 'textarea'].indexOf(nodeName) > -1) {
       oNodes[tgt] = tgt.value;
+      pendingInput = { element: tgt, oEventBase: { ...oEventBase }, frame: ifrSelector };
+      if (event.key && event.key.length === 1) {
+        const buf = keystrokeBuffers.get(tgt) || '';
+        keystrokeBuffers.set(tgt, buf + event.key);
+      } else if (event.key === 'Backspace') {
+        const buf = keystrokeBuffers.get(tgt) || '';
+        if (buf.length > 0) {
+          keystrokeBuffers.set(tgt, buf.slice(0, -1));
+        }
+      }
     }
     if (
       nodeName === 'input' &&
@@ -271,15 +354,30 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
       hasKeyReturn = true;
       // lastSelectorWithReturn = selector;
       lastNodes.return = tgt;
+      const useBuffer = isBufferedValue(tgt);
       oEventToSend = {
         ...oEventBase,
-        type: 'fill_value',
-        value: tgt.value,
+        type: useBuffer ? 'bfill_value' : 'fill_value',
+        value: getEffectiveValue(tgt),
         frame: ifrSelector,
       };
+      if (useBuffer) {
+        const stableSel = getStableInputSelector(tgt, doc);
+        if (stableSel) {
+          oEventToSend.css = stableSel;
+        }
+      }
+      keystrokeBuffers.delete(tgt);
     }
   } else if (type === 'blur') {
     lastNodes.blur = tgt;
+    if (tgt === flushedInput) {
+      flushedInput = null;
+      return;
+    }
+    if (pendingInput && pendingInput.element === tgt) {
+      pendingInput = null;
+    }
     if (['input', 'textarea'].indexOf(nodeName) > -1) {
       oNodes[tgt] = tgt.value;
       if (tgt === lastNodes.return) {
@@ -292,12 +390,20 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
       ) {
         return;
       }
+      const useBuffer = isBufferedValue(tgt);
       oEventToSend = {
         ...oEventBase,
-        type: 'fill_value',
-        value: tgt.value,
+        type: useBuffer ? 'bfill_value' : 'fill_value',
+        value: getEffectiveValue(tgt),
         frame: ifrSelector,
       };
+      if (useBuffer) {
+        const stableSel = getStableInputSelector(tgt, doc);
+        if (stableSel) {
+          oEventToSend.css = stableSel;
+        }
+      }
+      keystrokeBuffers.delete(tgt);
     }
   } else if (type === 'change') {
     lastNodes.change = tgt;
