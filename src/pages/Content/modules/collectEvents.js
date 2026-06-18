@@ -199,10 +199,17 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
     ) {
       return;
     }
-    if (nodeName === 'label') {
-      const forAttr = tgt.getAttribute('for');
-      if (forAttr && document.getElementById(forAttr)) {
-        // can be ignored... will fire checkbox
+    const parentLabel = tgt.closest && tgt.closest('label');
+    if (parentLabel) {
+      const forAttr = parentLabel.getAttribute('for');
+      if (forAttr) {
+        const forEl = document.getElementById(forAttr);
+        if (forEl && forEl.nodeName.toLowerCase() === 'input' &&
+          (forEl.type === 'checkbox' || forEl.type === 'radio')) {
+          return;
+        }
+      }
+      if (parentLabel.querySelector('input[type="checkbox"], input[type="radio"]')) {
         return;
       }
     }
