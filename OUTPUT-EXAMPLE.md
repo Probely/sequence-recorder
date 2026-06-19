@@ -1,4 +1,4 @@
-# Result Example
+# Output Example
 
 JSON example containing all possible step types produced by the sequence recorder.
 
@@ -124,6 +124,14 @@ JSON example containing all possible step types produced by the sequence recorde
     "type": "click",
     "value": "Submit",
     "frame": "#content-iframe"
+  },
+  {
+    "timestamp": 1718724013000,
+    "css": ".nested-btn",
+    "xpath": "/html/body/div/button",
+    "type": "click",
+    "value": "Confirm",
+    "frame": "#outer-iframe >>> #inner-iframe"
   }
 ]
 ```
@@ -153,4 +161,4 @@ JSON example containing all possible step types produced by the sequence recorde
 | `xpath` | XPath selector for the target element |
 | `type` | Event type identifier |
 | `value` | Element value or trimmed text content (max 20 chars for clicks) |
-| `frame` | CSS selector of the containing iframe, empty string if top-level |
+| `frame` | CSS selector of the containing iframe, empty string if top-level. For nested iframes, selectors are joined with ` >>> ` from outermost to innermost (e.g. `#outer-iframe >>> #inner-iframe`) |

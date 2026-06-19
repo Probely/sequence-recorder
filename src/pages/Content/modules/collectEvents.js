@@ -199,11 +199,27 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
     ) {
       return;
     }
-    if (nodeName === 'label') {
-      const forAttr = tgt.getAttribute('for');
-      if (forAttr && document.getElementById(forAttr)) {
-        // can be ignored... will fire checkbox
-        return;
+    const parentLabel = tgt.closest && tgt.closest('label');
+    if (parentLabel) {
+      // Only suppress when the click is actually forwarded to the labeled control.
+      // Clicks on interactive descendants (links, buttons, other fields) are NOT
+      // forwarded by the browser and must still be recorded.
+      const interactiveHit = tgt.closest('a, button, input, select, textarea');
+      const forwardsToControl = !interactiveHit || !parentLabel.contains(interactiveHit);
+      if (forwardsToControl) {
+        const forAttr = parentLabel.getAttribute('for');
+        if (forAttr) {
+          const root = tgt.getRootNode();
+          const lookup = root && root.getElementById ? root : document; // shadow-DOM safe
+          const forEl = lookup.getElementById(forAttr);
+          if (forEl && forEl.nodeName.toLowerCase() === 'input' &&
+            (forEl.type === 'checkbox' || forEl.type === 'radio')) {
+            return;
+          }
+        }
+        if (parentLabel.querySelector('input[type="checkbox"], input[type="radio"]')) {
+          return;
+        }
       }
     }
     let typeStr = 'click';
