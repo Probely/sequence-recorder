@@ -81,6 +81,20 @@ JSON example containing all possible step types produced by the sequence recorde
     "frame": ""
   },
   {
+    "timestamp": 1718724007500,
+    "css": "#flutterCanvas",
+    "xpath": "/html/body/div/form/canvas",
+    "type": "bfill_value",
+    "value": "admin@example.com",
+    "frame": "",
+    "coords": {
+      "x": 190,
+      "y": 200,
+      "width": 380,
+      "height": 520
+    }
+  },
+  {
     "timestamp": 1718724008000,
     "css": "#username",
     "xpath": "/html/body/div/form/input[1]",
@@ -146,7 +160,7 @@ JSON example containing all possible step types produced by the sequence recorde
 | `dblclick` | Double click on an element |
 | `mouseover` | Hover over an element (debounced at 500ms) |
 | `fill_value` | Value entered into an `<input>` or `<textarea>` (captured on blur or Enter) |
-| `bfill_value` | Buffered fill — keystroke-reconstructed value when the DOM `.value` is empty (e.g. virtual keyboards, frameworks that clear the field) |
+| `bfill_value` | Buffered fill — keystroke-reconstructed value when the DOM `.value` is empty (e.g. virtual keyboards, frameworks that clear the field, or canvas-rendered forms). For canvas inputs, includes `coords` from the preceding `bclick` that activated the virtual field |
 | `press_key` | Key press, currently only Enter (`value: 13`), emitted after a `fill_value`/`bfill_value` on Enter |
 | `change` (`check`) | Checkbox or radio button toggled; includes `checked` boolean |
 | `change` (`select`) | Single `<select>` dropdown changed; includes `selected` index and `value` |
