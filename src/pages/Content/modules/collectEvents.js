@@ -22,6 +22,8 @@ let stoMouseover = false;
 let pendingInput = null;
 let flushedInput = null;
 const keystrokeBuffers = new WeakMap();
+let pendingCanvasInput = null;
+let canvasKeystrokeBuffer = '';
 
 function getEffectiveValue(element) {
   const domValue = element.value;
@@ -140,7 +142,9 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
     }
   }
   if (selector && selector.toLowerCase() === 'html') {
-    return;
+    if (!(type === 'keydown' && pendingCanvasInput)) {
+      return;
+    }
   }
   let xpath = null;
   try {
@@ -182,6 +186,21 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
       flushedInput = pendingInput.element;
       pendingInput = null;
     }
+
+    if (pendingCanvasInput && canvasKeystrokeBuffer.length > 0 && callback) {
+      const canvasFillEvent = {
+        ...pendingCanvasInput.oEventBase,
+        type: 'bfill_value',
+        value: canvasKeystrokeBuffer,
+        frame: pendingCanvasInput.frame,
+      };
+      if (pendingCanvasInput.shadow_host_css) {
+        canvasFillEvent.shadow_host_css = pendingCanvasInput.shadow_host_css;
+      }
+      callback({ messageType: 'events', event: { ...canvasFillEvent } });
+    }
+    canvasKeystrokeBuffer = '';
+    pendingCanvasInput = null;
 
     if (
       lastNodes.return === lastNodes.change &&
@@ -280,6 +299,14 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
         }
       }
     }
+    if (typeStr === 'bclick') {
+      pendingCanvasInput = {
+        element: tgt,
+        oEventBase: { ...oEventBase },
+        frame: ifrSelector,
+        shadow_host_css: oEventToSend.shadow_host_css || null,
+      };
+    }
   } else if (type === 'dblclick') {
     lastNodes.dblclick = tgt;
     oEventToSend = {
@@ -360,6 +387,14 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
           keystrokeBuffers.set(tgt, buf.slice(0, -1));
         }
       }
+    } else if (pendingCanvasInput) {
+      if (event.key && event.key.length === 1) {
+        canvasKeystrokeBuffer += event.key;
+      } else if (event.key === 'Backspace') {
+        if (canvasKeystrokeBuffer.length > 0) {
+          canvasKeystrokeBuffer = canvasKeystrokeBuffer.slice(0, -1);
+        }
+      }
     }
     if (
       nodeName === 'input' &&
@@ -384,6 +419,31 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
         }
       }
       keystrokeBuffers.delete(tgt);
+    } else if (pendingCanvasInput && event.keyCode === 13) {
+      if (canvasKeystrokeBuffer.length > 0 && callback) {
+        const canvasFillEvent = {
+          ...pendingCanvasInput.oEventBase,
+          type: 'bfill_value',
+          value: canvasKeystrokeBuffer,
+          frame: pendingCanvasInput.frame,
+        };
+        if (pendingCanvasInput.shadow_host_css) {
+          canvasFillEvent.shadow_host_css = pendingCanvasInput.shadow_host_css;
+        }
+        callback({ messageType: 'events', event: { ...canvasFillEvent } });
+        canvasKeystrokeBuffer = '';
+      }
+      if (callback) {
+        const canvasReturnEvent = {
+          ...pendingCanvasInput.oEventBase,
+          timestamp: new Date().getTime(),
+          type: 'press_key',
+          value: 13,
+          frame: pendingCanvasInput.frame,
+        };
+        callback({ messageType: 'events', event: { ...canvasReturnEvent } });
+      }
+      pendingCanvasInput = null;
     }
   } else if (type === 'blur') {
     lastNodes.blur = tgt;
