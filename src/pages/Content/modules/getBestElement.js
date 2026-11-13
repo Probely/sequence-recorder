@@ -1,3 +1,9 @@
+import { dataTestAttrs } from './getCustomSelector';
+
+// data-qa/data-automation-id often mark containers whose delegated handlers
+// read event.target, so they don't promote a click to the parent.
+const parentTestAttrs = ['data-test-id', 'data-testid', 'data-test', 'data-cy'];
+
 export default function getBestElement(node, doc) {
   let nodeName = null;
   try {
@@ -33,12 +39,6 @@ export default function getBestElement(node, doc) {
       node = svgTag;
     }
     // check if node or parent has some "data-test" attribute
-    const dataTestAttrs = [
-      'data-test-id',
-      'data-testid',
-      'data-test',
-      'data-cy',
-    ];
     if (
       node.matches(dataTestAttrs.map((dataAttr) => `[${dataAttr}]`).join(','))
     ) {
@@ -47,7 +47,7 @@ export default function getBestElement(node, doc) {
       // check parent
       if (
         node.parentNode.matches(
-          dataTestAttrs.map((dataAttr) => `[${dataAttr}]`).join(',')
+          parentTestAttrs.map((dataAttr) => `[${dataAttr}]`).join(',')
         )
       ) {
         return node.parentNode;

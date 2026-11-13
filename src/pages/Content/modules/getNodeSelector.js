@@ -110,7 +110,9 @@ export default function finder(theNode, options) {
           isIdentifier: !0,
         }) +
         '="' +
-        cssesc(a.value) +
+        // cssesc() defaults to single quotes and leaves ">>>", which
+        // separates frame selectors, unescaped
+        CSS.escape(a.value) +
         '"]',
       penalty: 0.5,
     }));

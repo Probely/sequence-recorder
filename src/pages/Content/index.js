@@ -1,6 +1,9 @@
 import { interceptEvents } from './modules/collectEvents';
 import getNodeSelector from './modules/getNodeSelector';
-import getCustomSelector from './modules/getCustomSelector';
+import getCustomSelector, {
+  dataTestAttrs,
+  isStableClassName,
+} from './modules/getCustomSelector';
 
 (function () {
   // console.log('CONTENT SCRIPT HAS BEEN LOADED');
@@ -76,16 +79,12 @@ import getCustomSelector from './modules/getCustomSelector';
                   try {
                     frameSelector = getNodeSelector(frame, {
                       root: window.document,
+                      attr: (name, value) =>
+                        dataTestAttrs.includes(name) && !value.includes('\0'),
                       idName: (name) => {
                         return !/^[0-9]+.*/i.test(name);
                       },
-                      className: (name) => {
-                        return (
-                          !name.includes('focus') &&
-                          !name.includes('highlight') &&
-                          !/^[0-9]+.*/i.test(name)
-                        );
-                      },
+                      className: isStableClassName,
                       // seedMinLength: 3,
                       // optimizedMinLength: 3,
                     });
@@ -142,16 +141,12 @@ import getCustomSelector from './modules/getCustomSelector';
                   try {
                     frameSelector = getNodeSelector(frame, {
                       root: window.document,
+                      attr: (name, value) =>
+                        dataTestAttrs.includes(name) && !value.includes('\0'),
                       idName: (name) => {
                         return !/^[0-9]+.*/i.test(name);
                       },
-                      className: (name) => {
-                        return (
-                          !name.includes('focus') &&
-                          !name.includes('highlight') &&
-                          !/^[0-9]+.*/i.test(name)
-                        );
-                      },
+                      className: isStableClassName,
                     });
                   } catch (ex) {
                     // ignore
@@ -221,6 +216,18 @@ import getCustomSelector from './modules/getCustomSelector';
         //   addMutationObserver(document);
         // });
         document.addEventListener('click', eventInterceptopMainHandler, true);
+        // only marks where a new user activation starts
+        document.addEventListener(
+          'pointerdown',
+          eventInterceptopMainHandler,
+          true
+        );
+        // only records what is still held before the page goes away
+        window.addEventListener(
+          'beforeunload',
+          eventInterceptopMainHandler,
+          true
+        );
         // document.addEventListener('focus', eventInterceptopMainHandler, true);
         document.addEventListener(
           'mouseover',
