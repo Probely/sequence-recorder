@@ -1,3 +1,5 @@
+import { dataTestAttrs } from './getCustomSelector';
+
 export default function getBestElement(node, doc) {
   let nodeName = null;
   try {
@@ -33,12 +35,6 @@ export default function getBestElement(node, doc) {
       node = svgTag;
     }
     // check if node or parent has some "data-test" attribute
-    const dataTestAttrs = [
-      'data-test-id',
-      'data-testid',
-      'data-test',
-      'data-cy',
-    ];
     if (
       node.matches(dataTestAttrs.map((dataAttr) => `[${dataAttr}]`).join(','))
     ) {

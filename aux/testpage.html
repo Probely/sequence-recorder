@@ -117,6 +117,12 @@
       <p><a href="./secondpage.html">Go to second page</a></p>
     </div>
     <div class="item_test_container">
+      <p>Popups</p>
+      <p><a href="./secondpage.html" target="_blank" id="popup_link">Open second page in a new tab</a></p>
+      <button type="button" id="popup_button" onclick="window.open('./secondpage.html', 'popup_window', 'width=600,height=400')">Open second page in a popup window</button>
+      <p><a href="./popup_onload.html" id="popup_onload_link">Go to a page that opens a popup on load</a></p>
+    </div>
+    <div class="item_test_container">
       <p>Elements that only change attribute</p>
       <div id="mouse_over_attributes">
         Mouse over to hange color
