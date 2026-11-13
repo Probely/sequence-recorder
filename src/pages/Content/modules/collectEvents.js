@@ -30,11 +30,27 @@ const keystrokeBuffers = new WeakMap();
 let pendingCanvasInput = null;
 let canvasKeystrokeBuffer = '';
 let lastRecordedClick = null;
-// A checkbox/radio "change" this soon after a recorded click on another
-// element was caused by that click (e.g. custom checkboxes calling
-// input.click()), so replaying both would toggle it twice.
+// Heuristic: a checkbox/radio "change" with no trusted click of its own this
+// soon after a recorded click on another element is assumed to be that
+// click's side effect (e.g. custom checkboxes calling input.click()), so it
+// isn't recorded twice. Later side effects are still recorded, and unrelated
+// changes inside the window are dropped.
 const SIDE_EFFECT_CHANGE_MS = 100;
 const watchedShadowRoots = new WeakSet();
+
+// A trusted pointerdown/keydown starts a new user activation. The browser
+// forwards a label click to its control within the same task, so any other
+// trusted click on a checkbox/radio is the user's own action.
+function newActivation() {
+  return {
+    // label clicks not yet forwarded; the label's handlers can replace its
+    // control or change its "for", so it's looked up when the click arrives
+    labels: new Set(),
+    // toggle input -> 'label' (forwarded) or 'user'
+    toggleClicks: new WeakMap(),
+  };
+}
+let activation = newActivation();
 
 // "change" is not a composed event, so it never reaches the document
 // listeners from inside a shadow root; listen on each open root instead.
@@ -45,8 +61,16 @@ function watchShadowRoots(composedPath, doc, ifrSelector, callback) {
       item.addEventListener(
         'change',
         (ev) => {
-          // slotted (light DOM) targets also reach the outer listeners
-          if (ev.target && ev.target.getRootNode() === item) {
+          // slotted (light DOM) targets also reach the outer listeners,
+          // composed events the document ones, and retargeted events the
+          // inner root's own listener
+          const path = ev.composedPath();
+          if (
+            !path.includes(doc) &&
+            ev.target &&
+            ev.target.getRootNode() === item &&
+            path[0] === ev.target
+          ) {
             interceptEvents(ev, doc, ifrSelector, callback);
           }
         },
@@ -87,7 +111,8 @@ function isCanvasSurface(element) {
 }
 
 const finderOptions = {
-  attr: (name) => dataTestAttrs.includes(name),
+  // CSS can't represent NUL, so such a value would never match
+  attr: (name, value) => dataTestAttrs.includes(name) && !value.includes('\0'),
   idName: (name) => {
     return !/^[0-9]+.*/i.test(name);
   },
@@ -169,7 +194,86 @@ function getStableInputSelector(element, doc) {
   return null;
 }
 
+function getRecordedTarget(element, doc) {
+  const css = getElementSelector(element, doc);
+  if (!css) {
+    return null;
+  }
+  let xpath = '';
+  try {
+    xpath = getXPath(element, doc) || '';
+  } catch (ex) {
+    // ignore
+  }
+  return { css, xpath };
+}
+
+// A click inside a label is held, with everything recorded after it, until
+// the click is over: only if the label forwarded it to its control is it
+// recorded as a click on the label.
+const heldEvents = [];
+
+function emit(callback, payload) {
+  if (heldEvents.length) {
+    heldEvents.push({ callback, payload });
+  } else {
+    callback(payload);
+  }
+}
+
+function releaseHeldEvents(clickIsOver) {
+  const undecided = heldEvents.some(
+    (held) => held.label && held.forwarded === undefined
+  );
+  if (undecided && !clickIsOver) {
+    return;
+  }
+  for (const held of heldEvents.splice(0)) {
+    const { event } = held.payload;
+    held.callback({
+      ...held.payload,
+      event: held.label && held.forwarded ? { ...event, ...held.label } : event,
+    });
+  }
+}
+
 export function interceptEvents(event, doc, ifrSelector, callback) {
+  // The page may go away before the timer releasing held clicks runs. This
+  // can come while a label click is still being handled, so a click not yet
+  // forwarded is recorded on the element actually clicked.
+  if (event && event.type === 'beforeunload') {
+    if (event.isTrusted) {
+      releaseHeldEvents(true);
+    }
+    return;
+  }
+  const startsActivation =
+    event &&
+    event.isTrusted &&
+    (event.type === 'pointerdown' || event.type === 'keydown');
+  if (heldEvents.length && event && event.type === 'click') {
+    const origin = event.composedPath()[0];
+    for (let i = heldEvents.length - 1; i >= 0; i--) {
+      const held = heldEvents[i];
+      if (
+        held.label &&
+        held.forwarded === undefined &&
+        held.labelElm.control === origin &&
+        held.isTrusted === event.isTrusted
+      ) {
+        held.forwarded = true;
+        releaseHeldEvents(false);
+        break;
+      }
+    }
+  }
+  if (startsActivation) {
+    releaseHeldEvents(true);
+    activation = newActivation();
+  }
+  if (event && event.type === 'pointerdown') {
+    return;
+  }
   let hasKeyReturn = false;
   let tgt = null;
   let composedPath = null;
@@ -259,7 +363,7 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
           fillEvent.css = stableSel;
         }
       }
-      callback({ messageType: 'events', event: { ...fillEvent } });
+      emit(callback, { messageType: 'events', event: { ...fillEvent } });
       keystrokeBuffers.delete(pendingInput.element);
       flushedInput = pendingInput.element;
       pendingInput = null;
@@ -275,7 +379,7 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
       if (pendingCanvasInput.shadow_host_css) {
         canvasFillEvent.shadow_host_css = pendingCanvasInput.shadow_host_css;
       }
-      callback({ messageType: 'events', event: { ...canvasFillEvent } });
+      emit(callback, { messageType: 'events', event: { ...canvasFillEvent } });
     }
     canvasKeystrokeBuffer = '';
     pendingCanvasInput = null;
@@ -291,6 +395,15 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
       return;
     }
     if (isToggleInput) {
+      // the "change" records it; untrusted clicks come from page scripts
+      if (event.isTrusted) {
+        const { labels } = activation;
+        const forwardedBy = [...labels].find((label) => label.control === tgt);
+        labels.delete(forwardedBy);
+        activation.toggleClicks.set(tgt, forwardedBy ? 'label' : 'user');
+      } else {
+        activation.toggleClicks.delete(tgt);
+      }
       return;
     }
     // the resulting "change" records the selection; replaying the click as
@@ -302,7 +415,7 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
     ) {
       return;
     }
-    let clickedElm = tgt;
+    let labelClick = null;
     const parentLabel = tgt.closest && tgt.closest('label');
     if (parentLabel) {
       // Clicks on interactive descendants (links, buttons, other fields) are
@@ -311,28 +424,45 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
       const forwardsToControl =
         !interactiveHit || !parentLabel.contains(interactiveHit);
       const control = parentLabel.control;
-      if (
-        forwardsToControl &&
+      const labelsToggle =
         control &&
         control.nodeName.toLowerCase() === 'input' &&
-        (control.type === 'checkbox' || control.type === 'radio')
-      ) {
-        // Record the label click instead of the control's "change": setting
-        // .checked on replay bypasses framework handlers (e.g. React), and
-        // custom toggles often swap the inner icon when the state changes.
-        const labelSelector = getElementSelector(parentLabel, doc);
-        if (labelSelector) {
-          clickedElm = parentLabel;
-          let labelXPath = '';
-          try {
-            labelXPath = getXPath(parentLabel, doc) || '';
-          } catch (ex) {
-            // ignore
-          }
+        (control.type === 'checkbox' || control.type === 'radio');
+      // the guess above can be wrong (an <a> without href is forwarded), so
+      // the forwarded click itself must still be attributed to the label
+      const { labels } = activation;
+      labels.add(parentLabel);
+      // a canceled click or disabled control is never forwarded
+      setTimeout(() => labels.delete(parentLabel), 0);
+      if (forwardsToControl && labelsToggle) {
+        // Record the click instead of the control's "change": setting
+        // .checked on replay bypasses framework handlers (e.g. React).
+        // A click the label forwarded replays the same on the label, which is
+        // more stable as custom toggles swap the inner icon when the state
+        // changes. One it didn't forward (canceled, disabled control) only
+        // replays the same on the element actually clicked, not on a
+        // promoted ancestor.
+        const clicked = getRecordedTarget(tgt, doc);
+        if (clicked) {
           oEventBase = {
             ...oEventBase,
-            css: labelSelector,
-            xpath: isInShadowRoot ? oEventBase.xpath : labelXPath,
+            css: clicked.css,
+            xpath: isInShadowRoot ? oEventBase.xpath : clicked.xpath,
+          };
+        }
+        const labelTarget =
+          tgt !== parentLabel && getRecordedTarget(parentLabel, doc);
+        if (labelTarget) {
+          labelClick = {
+            labelElm: parentLabel,
+            label: {
+              css: labelTarget.css,
+              xpath: isInShadowRoot ? oEventBase.xpath : labelTarget.xpath,
+              value: (parentLabel.textContent || '')
+                .trim()
+                .substr(0, 20)
+                .replace(/\n/gi, ''),
+            },
           };
         }
       }
@@ -353,13 +483,24 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
     oEventToSend = {
       ...oEventBase,
       type: typeStr,
-      value: (clickedElm.value || clickedElm.textContent || '')
+      value: (tgt.value || tgt.textContent || '')
         .trim()
         .substr(0, 20)
         .replace(/\n/gi, ''),
       frame: ifrSelector,
     };
-    lastRecordedClick = { element: clickedElm, timestamp: oEventBase.timestamp };
+    lastRecordedClick = { element: tgt, timestamp: oEventBase.timestamp };
+    if (labelClick && typeStr === 'click' && callback) {
+      heldEvents.push({
+        ...labelClick,
+        isTrusted: event.isTrusted,
+        callback,
+        payload: { messageType: 'events', event: oEventToSend },
+      });
+      // the label forwards the click, if at all, before this task ends
+      setTimeout(() => releaseHeldEvents(true), 0);
+      return;
+    }
 
     // Add shadow host CSS selector for bclick events inside shadow DOM
     if (typeStr === 'bclick' && shadowRootIdx > -1 && composedPath) {
@@ -442,7 +583,7 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
         frame: ifrSelector,
       };
       if (oEventToSend && oEventToSend.type && callback) {
-        callback({
+        emit(callback, {
           messageType: 'events',
           event: { ...oEventToSend },
         });
@@ -472,7 +613,7 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
           keystrokeBuffers.set(tgt, buf.slice(0, -1));
         }
       }
-    } else if (pendingCanvasInput) {
+    } else if (pendingCanvasInput && !isToggleInput) {
       if (event.key && event.key.length === 1) {
         canvasKeystrokeBuffer += event.key;
       } else if (event.key === 'Backspace') {
@@ -517,7 +658,10 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
         if (pendingCanvasInput.shadow_host_css) {
           canvasFillEvent.shadow_host_css = pendingCanvasInput.shadow_host_css;
         }
-        callback({ messageType: 'events', event: { ...canvasFillEvent } });
+        emit(callback, {
+          messageType: 'events',
+          event: { ...canvasFillEvent },
+        });
         canvasKeystrokeBuffer = '';
       }
       if (callback) {
@@ -528,7 +672,10 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
           value: 13,
           frame: pendingCanvasInput.frame,
         };
-        callback({ messageType: 'events', event: { ...canvasReturnEvent } });
+        emit(callback, {
+          messageType: 'events',
+          event: { ...canvasReturnEvent },
+        });
       }
       pendingCanvasInput = null;
     }
@@ -571,12 +718,22 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
   } else if (type === 'change') {
     lastNodes.change = tgt;
     if (nodeName === 'input') {
-      if (nodeType === 'checkbox' || nodeType === 'radio') {
+      if (isToggleInput) {
+        const activatedBy = activation.toggleClicks.get(tgt);
+        activation.toggleClicks.delete(tgt);
+        // the recorded label click replays it
+        if (activatedBy === 'label') {
+          return;
+        }
+        // Unattributed changes are handled as before, which includes not
+        // recording mixed-case types (their late side effects would double).
         if (
-          lastRecordedClick &&
-          lastRecordedClick.element !== tgt &&
-          oEventBase.timestamp - lastRecordedClick.timestamp <
-          SIDE_EFFECT_CHANGE_MS
+          !activatedBy &&
+          ((nodeType !== 'checkbox' && nodeType !== 'radio') ||
+            (lastRecordedClick &&
+              lastRecordedClick.element !== tgt &&
+              oEventBase.timestamp - lastRecordedClick.timestamp <
+                SIDE_EFFECT_CHANGE_MS))
         ) {
           return;
         }
@@ -626,7 +783,7 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
   }
 
   if (oEventToSend && oEventToSend.type && callback) {
-    callback({
+    emit(callback, {
       messageType: 'events',
       event: { ...oEventToSend },
     });
@@ -639,7 +796,7 @@ export function interceptEvents(event, doc, ifrSelector, callback) {
       value: 13,
       frame: ifrSelector,
     };
-    callback({
+    emit(callback, {
       messageType: 'events',
       event: { ...oReturnEvent },
     });

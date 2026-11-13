@@ -79,7 +79,8 @@ import getCustomSelector, {
                   try {
                     frameSelector = getNodeSelector(frame, {
                       root: window.document,
-                      attr: (name) => dataTestAttrs.includes(name),
+                      attr: (name, value) =>
+                        dataTestAttrs.includes(name) && !value.includes('\0'),
                       idName: (name) => {
                         return !/^[0-9]+.*/i.test(name);
                       },
@@ -140,7 +141,8 @@ import getCustomSelector, {
                   try {
                     frameSelector = getNodeSelector(frame, {
                       root: window.document,
-                      attr: (name) => dataTestAttrs.includes(name),
+                      attr: (name, value) =>
+                        dataTestAttrs.includes(name) && !value.includes('\0'),
                       idName: (name) => {
                         return !/^[0-9]+.*/i.test(name);
                       },
@@ -214,6 +216,18 @@ import getCustomSelector, {
         //   addMutationObserver(document);
         // });
         document.addEventListener('click', eventInterceptopMainHandler, true);
+        // only marks where a new user activation starts
+        document.addEventListener(
+          'pointerdown',
+          eventInterceptopMainHandler,
+          true
+        );
+        // only records what is still held before the page goes away
+        window.addEventListener(
+          'beforeunload',
+          eventInterceptopMainHandler,
+          true
+        );
         // document.addEventListener('focus', eventInterceptopMainHandler, true);
         document.addEventListener(
           'mouseover',
