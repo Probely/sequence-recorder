@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Popup on load test page</title>
+</head>
+<body>
+  <h1>Popup on load test page</h1>
+  <p>A popup window with the second page opens automatically when this page loads.</p>
+  <script type="text/javascript">
+    window.onload = function () {
+      window.open('./secondpage.html', 'popup_onload_window', 'width=600,height=500,resizable=yes,scrollbars=yes');
+    };
+  </script>
+  <p><a href="./testpage.html">Go back to the main page</a></p>
+</body>
+</html>
