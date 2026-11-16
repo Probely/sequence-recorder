@@ -1,4 +1,4 @@
-import { interceptEvents } from './modules/collectEvents';
+import { interceptEvents, watchLabelContent } from './modules/collectEvents';
 import getNodeSelector from './modules/getNodeSelector';
 import getCustomSelector, {
   dataTestAttrs,
@@ -215,6 +215,7 @@ import getCustomSelector, {
         // window.addEventListener('load', (ev) => {
         //   addMutationObserver(document);
         // });
+        watchLabelContent(document);
         document.addEventListener('click', eventInterceptopMainHandler, true);
         // only marks where a new user activation starts
         document.addEventListener(

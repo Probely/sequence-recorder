@@ -1,0 +1,972 @@
+<!doctype html>
+<html>
+<head>
+
+<meta charset="utf-8">
+<title>Sequence recorder - toggles, labels and page-script clicks</title>
+<style type="text/css">
+  body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    font-family: sans-serif;
+  }
+  .container {
+    display: flex;
+    flex: 1;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .item_test_container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 1px solid blue;
+    width: 300px;
+    padding: 6px;
+    text-align: center;
+  }
+  .item_test_container.known {
+    border-color: orange;
+  }
+  .item_test_container h3 {
+    margin: 4px 0;
+    font-size: 14px;
+  }
+  .do, .expect {
+    margin: 2px 0;
+    font-size: 12px;
+    text-align: left;
+    width: 100%;
+  }
+  .expect {
+    color: #555;
+  }
+  .status {
+    margin: 6px 0 0;
+    font-family: monospace;
+    font-size: 11px;
+    color: #060;
+    min-height: 14px;
+  }
+  .widget {
+    margin: 10px;
+    padding: 6px 10px;
+    border: 1px dashed #999;
+    cursor: pointer;
+  }
+  input, button, select {
+    margin: 10px;
+  }
+  .hidden-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    margin: 0;
+    width: 1px;
+    height: 1px;
+  }
+  .link {
+    color: #06c;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .css-check {
+    display: none;
+  }
+  .css-check-label::before {
+    content: '';
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    margin-right: 6px;
+    border: 1px solid #333;
+    vertical-align: middle;
+  }
+  .css-check:checked + .css-check-label::before {
+    background: #06f;
+  }
+  .icon {
+    margin-left: 6px;
+    color: #0a0;
+    font-style: normal;
+  }
+</style>
+</head>
+<body>
+  <h1>Toggles, labels and page-script clicks</h1>
+  <p>
+    Start recording, go through the cards (reload the page between groups if you like), then stop and compare the
+    recording with each card's <b>Expect</b>. The green status line shows checkbox states and handler counts: after
+    replaying the recording on a fresh load, it should show what it showed at the end of recording. Orange cards
+    document behavior that is accepted or not handled.
+  </p>
+
+  <h2>A. Clicks inside labels</h2>
+  <div class="container">
+    <div class="item_test_container case" data-case="A1">
+      <h3>A1. Ordinary label</h3>
+      <label id="a1_label"><span id="a1_text">Remember me</span><input type="checkbox" id="a1_cb" onclick="hit('a1_cb')"></label>
+      <p class="do">Do: click the text.</p>
+      <p class="expect">Expect: click on <code>#a1_text</code>; no change step.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="A2" data-counts="a2_terms">
+      <h3>A2. Span that cancels its own click</h3>
+      <label><input type="checkbox" id="a2_cb" onclick="hit('a2_cb')"> I accept the <span id="a2_terms" class="link">terms</span></label>
+      <p class="do">Do: click "terms".</p>
+      <p class="expect">Expect: click on <code>#a2_terms</code>; checkbox stays unchecked.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="A3" data-counts="a3_link">
+      <h3>A3. &lt;a&gt; without href inside a label</h3>
+      <label><input type="checkbox" id="a3_cb" onclick="hit('a3_cb')"> Read the <a id="a3_link" onclick="hit('a3_link')">policy</a></label>
+      <p class="do">Do: click "policy" (the browser forwards it, so the box ticks).</p>
+      <p class="expect">Expect: click on <code>#a3_link</code> only; no extra change step.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="A4" data-counts="a4_link">
+      <h3>A4. &lt;a href&gt; inside a label</h3>
+      <label><input type="checkbox" id="a4_cb" onclick="hit('a4_cb')"> See <a href="#a4" id="a4_link" onclick="event.preventDefault(); hit('a4_link')">details</a></label>
+      <p class="do">Do: click "details" (not forwarded).</p>
+      <p class="expect">Expect: click on <code>#a4_link</code>; checkbox unchanged.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="A5">
+      <h3>A5. Label handler replaces its checkbox</h3>
+      <label id="a5_label"><span id="a5_text">Replace me</span><input type="checkbox" id="a5_cb" onclick="hit('a5_cb')"></label>
+      <p class="do">Do: click the text.</p>
+      <p class="expect">Expect: click on <code>#a5_text</code> only; the new checkbox is ticked.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="A6">
+      <h3>A6. Label handler changes its "for"</h3>
+      <label id="a6_label" for="a6_first"><span id="a6_text">Point me elsewhere</span></label>
+      <span>first <input type="checkbox" id="a6_first" onclick="hit('a6_first')"></span>
+      <span>second <input type="checkbox" id="a6_second" onclick="hit('a6_second')"></span>
+      <p class="do">Do: click the text once.</p>
+      <p class="expect">Expect: click on <code>#a6_text</code> only; "second" is ticked.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="A7">
+      <h3>A7. Label cancels clicks targeting itself</h3>
+      <label id="a7_label" for="a7_cb" onclick="if (event.target === this) event.preventDefault()"><span id="a7_text">Agree</span></label>
+      <input type="checkbox" id="a7_cb" onclick="hit('a7_cb')">
+      <p class="do">Do: click "Agree".</p>
+      <p class="expect">Expect: click on <code>#a7_text</code> (not the label, whose own clicks are canceled); ticked.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="A8">
+      <h3>A8. Same, wide block label</h3>
+      <label id="a8_label" for="a8_cb" style="display: block; width: 100%; text-align: left; border: 1px dotted #999" onclick="if (event.target === this) event.preventDefault()"><span id="a8_text">Agree</span></label>
+      <input type="checkbox" id="a8_cb" onclick="hit('a8_cb')">
+      <p class="do">Do: click "Agree" (the label's center is empty space).</p>
+      <p class="expect">Expect: click on <code>#a8_text</code>; ticked after replay too.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="A9">
+      <h3>A9. Checkbox cancels the forwarded click</h3>
+      <label><span id="a9_text">Locked option</span><input type="checkbox" id="a9_cb" onclick="hit('a9_cb'); return false"></label>
+      <p class="do">Do: click the text.</p>
+      <p class="expect">Expect: click on <code>#a9_text</code>; stays unchecked, a9_cb handler runs once.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="A10">
+      <h3>A10. Label handler cancels the forwarded click</h3>
+      <label id="a10_label"><span id="a10_text">Guarded option</span><input type="checkbox" id="a10_cb" onclick="hit('a10_cb')"></label>
+      <p class="do">Do: click the text.</p>
+      <p class="expect">Expect: click on <code>#a10_text</code>; stays unchecked.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="A11" data-counts="a11_text">
+      <h3>A11. Span with its own click handler</h3>
+      <label><span id="a11_text" onclick="hit('a11_text')">Counted text</span><input type="checkbox" id="a11_cb" onclick="hit('a11_cb')"></label>
+      <p class="do">Do: click the text.</p>
+      <p class="expect">Expect: click on <code>#a11_text</code>; both handlers run once after replay.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="A12">
+      <h3>A12. Icon created on hover</h3>
+      <label id="a12_label"><span>Hover me, then click the check mark</span><input type="checkbox" id="a12_cb" onclick="hit('a12_cb')"></label>
+      <p class="do">Do: hover the label, click the green check mark that appears.</p>
+      <p class="expect">Expect: mouseover on <code>#a12_label</code>, then click on <code>#a12_icon</code> (xpath of the label as fallback); ticked.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="A13">
+      <h3>A13. Icon swapped on each change</h3>
+      <label id="a13_label"><i id="a13_icon" class="icon">&#9744;</i><input type="checkbox" id="a13_cb" onclick="hit('a13_cb')"></label>
+      <p class="do">Do: click the box icon twice.</p>
+      <p class="expect">Expect: click on <code>#a13_icon</code>, then mouseover on <code>#a13_label</code> and click on the new <code>#a13_icon</code>; ends unchecked.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="A14">
+      <h3>A14. Label built by script in two steps</h3>
+      <div id="a14_slot"></div>
+      <p class="do">Do: click the text (the label cancels clicks targeting itself).</p>
+      <p class="expect">Expect: click on <code>#a14_text</code>; ticked.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="A15">
+      <h3>A15. Hover icon + label cancels its own clicks</h3>
+      <label id="a15_label" for="a15_cb" onclick="if (event.target === this) event.preventDefault()"><span>Hover me, then click the check mark</span></label>
+      <input type="checkbox" id="a15_cb" onclick="hit('a15_cb')">
+      <p class="do">Do: hover the label, click the check mark.</p>
+      <p class="expect">Expect: mouseover on <code>#a15_label</code>, then click on <code>#a15_icon</code>; ticked.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="A19">
+      <h3>A19. Same, wide label with an empty center</h3>
+      <label id="a19_label" for="a19_cb" style="display: block; width: 100%; text-align: left; border: 1px dotted #999" onclick="if (event.target === this) event.preventDefault()"><span>Hover me, click the check mark</span></label>
+      <input type="checkbox" id="a19_cb" onclick="hit('a19_cb')">
+      <p class="do">Do: hover the label, click the check mark at its end.</p>
+      <p class="expect">Expect: mouseover on <code>#a19_label</code>, then click on <code>#a19_icon</code>; ticked (a click on the label's empty center would be canceled).</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="A16">
+      <h3>A16. Radio group with labels</h3>
+      <label><span id="a16_t1">Small</span><input type="radio" name="a16" id="a16_r1"></label>
+      <label><span id="a16_t2">Medium</span><input type="radio" name="a16" id="a16_r2"></label>
+      <label><span id="a16_t3">Large</span><input type="radio" name="a16" id="a16_r3"></label>
+      <p class="do">Do: click "Medium", then "Large".</p>
+      <p class="expect">Expect: two clicks on the spans; no change steps.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="A17">
+      <h3>A17. Disabled checkbox behind a label</h3>
+      <label><span id="a17_text">Not available</span><input type="checkbox" id="a17_cb" disabled></label>
+      <p class="do">Do: click the text.</p>
+      <p class="expect">Expect: click on <code>#a17_text</code>; nothing toggles.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="A18">
+      <h3>A18. Mixed-case type="Checkbox"</h3>
+      <input type="Checkbox" id="a18_cb" onclick="hit('a18_cb')">
+      <p class="do">Do: click the box itself.</p>
+      <p class="expect">Expect: change step (checked: true).</p>
+      <p class="status"></p>
+    </div>
+  </div>
+
+  <h2>B. Checkbox changes without a click of their own</h2>
+  <div class="container">
+    <div class="item_test_container case" data-case="B1">
+      <h3>B1. Space on a custom widget right after a click</h3>
+      <button type="button" id="b1_focus">Focus widget</button>
+      <div id="b1_widget" class="widget" role="checkbox" tabindex="0" aria-checked="false">&#9744; Custom checkbox<input type="checkbox" id="b1_cb" class="hidden-input" onclick="hit('b1_cb')"></div>
+      <p class="do">Do: click "Focus widget", then press Space right away.</p>
+      <p class="expect">Expect: click on <code>#b1_focus</code> + change on <code>#b1_cb</code> (checked: true).</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="B2">
+      <h3>B2. Space on a widget, toggled 150 ms later</h3>
+      <div id="b2_widget" class="widget" role="checkbox" tabindex="0" aria-checked="false">&#9744; Slow checkbox<input type="checkbox" id="b2_cb" class="hidden-input" onclick="hit('b2_cb')"></div>
+      <p class="do">Do: Tab to the widget (or click it), press Space.</p>
+      <p class="expect">Expect: change on <code>#b2_cb</code> (checked: true).</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="B3">
+      <h3>B3. Canceled label handler ticks its input later</h3>
+      <label id="b3_label"><span id="b3_text">Accept (ticks after 150 ms)</span><input type="checkbox" id="b3_cb" onclick="hit('b3_cb')"></label>
+      <p class="do">Do: click the text.</p>
+      <p class="expect">Expect: click on <code>#b3_text</code> only; ticked once.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="B4">
+      <h3>B4. Custom box ticks its hidden input</h3>
+      <span id="b4_box" class="widget">&#9744; Custom box</span><input type="checkbox" id="b4_cb" class="hidden-input" onclick="hit('b4_cb')">
+      <p class="do">Do: click the box.</p>
+      <p class="expect">Expect: bclick on <code>#b4_box</code> only (its handler clicked the input).</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="B5">
+      <h3>B5. Same, 30 ms later</h3>
+      <span id="b5_box" class="widget">&#9744; Custom box (30 ms)</span><input type="checkbox" id="b5_cb" class="hidden-input" onclick="hit('b5_cb')">
+      <p class="do">Do: click the box.</p>
+      <p class="expect">Expect: click on <code>#b5_box</code> only.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="B6">
+      <h3>B6. Same, 150 ms later</h3>
+      <span id="b6_box" class="widget">&#9744; Custom box (150 ms)</span><input type="checkbox" id="b6_cb" class="hidden-input" onclick="hit('b6_cb')">
+      <p class="do">Do: click the box, then press Tab right away.</p>
+      <p class="expect">Expect: click on <code>#b6_box</code> only (Tab doesn't take the change over).</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="B7">
+      <h3>B7. Select-all button</h3>
+      <button type="button" id="b7_all">Select all</button>
+      <span>one <input type="checkbox" id="b7_one" onclick="hit('b7_one')"></span>
+      <span>two <input type="checkbox" id="b7_two" onclick="hit('b7_two')"></span>
+      <p class="do">Do: click "Select all".</p>
+      <p class="expect">Expect: bclick on <code>#b7_all</code> only.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="B8">
+      <h3>B8. Change handler ticks another (inline onclick)</h3>
+      <span>main <input type="checkbox" id="b8_main" onclick="hit('b8_main')"></span>
+      <span>follower <input type="checkbox" id="b8_follower" onclick="hit('b8_follower')"></span>
+      <p class="do">Do: click "main".</p>
+      <p class="expect">Expect: change on <code>#b8_main</code> only; both ticked after replay.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="B9">
+      <h3>B9. Same, without inline onclick</h3>
+      <span>main <input type="checkbox" id="b9_main"></span>
+      <span>follower <input type="checkbox" id="b9_follower"></span>
+      <p class="do">Do: click "main".</p>
+      <p class="expect">Expect: change on <code>#b9_main</code> only; both ticked after replay.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="B10" data-counts="b10_button">
+      <h3>B10. Change handler clicks a button</h3>
+      <span>notify <input type="checkbox" id="b10_cb"></span>
+      <button type="button" id="b10_button" onclick="hit('b10_button')">Notified</button>
+      <p class="do">Do: click "notify".</p>
+      <p class="expect">Expect: change on <code>#b10_cb</code> only; the button runs once after replay.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="B11">
+      <h3>B11. Space on a widget ticks two checkboxes</h3>
+      <div id="b11_widget" class="widget" role="button" tabindex="0">Both (press Space)</div>
+      <span>x <input type="checkbox" id="b11_x" onclick="hit('b11_x')"></span>
+      <span>y <input type="checkbox" id="b11_y" onclick="hit('b11_y')"></span>
+      <p class="do">Do: Tab to the widget, press Space.</p>
+      <p class="expect">Expect: change on <code>#b11_x</code> + change on <code>#b11_y</code> (Space isn't recorded).</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="B12" data-counts="b12_button">
+      <h3>B12. Checkbox clicked right after another click</h3>
+      <button type="button" id="b12_button" onclick="hit('b12_button')">Click first</button>
+      <input type="checkbox" id="b12_cb" onclick="hit('b12_cb')">
+      <p class="do">Do: click the button, then the checkbox as fast as you can.</p>
+      <p class="expect">Expect: click on <code>#b12_button</code> + change on <code>#b12_cb</code>.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="B13" data-counts="b13_other">
+      <h3>B13. Delayed Space toggle, then another button</h3>
+      <div id="b13_widget" class="widget" role="checkbox" tabindex="0" aria-checked="false">&#9744; Slow checkbox<input type="checkbox" id="b13_cb" class="hidden-input" onclick="hit('b13_cb')"></div>
+      <button type="button" id="b13_other" onclick="hit('b13_other')">Other button</button>
+      <p class="do">Do: Tab to the widget, press Space, then click "Other button" right away.</p>
+      <p class="expect">Expect: click on <code>#b13_other</code>, then change on <code>#b13_cb</code> (the late toggle isn't attributed to the button).</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="B14">
+      <h3>B14. Box toggles 80 ms later, ArrowRight at once</h3>
+      <span id="b14_box" class="widget">&#9744; Custom box (80 ms)</span><input type="checkbox" id="b14_cb" class="hidden-input" onclick="hit('b14_cb')">
+      <p class="do">Do: click the box, then press ArrowRight right away.</p>
+      <p class="expect">Expect: click on <code>#b14_box</code> only (the late toggle isn't taken by the arrow key).</p>
+      <p class="status"></p>
+    </div>
+  </div>
+
+  <h2>C. Clicks made by page scripts</h2>
+  <div class="container">
+    <div class="item_test_container case" data-case="C1" data-counts="c1_button">
+      <h3>C1. Canceled label child clicks another button</h3>
+      <label><span id="c1_text" class="link">Child</span><input type="checkbox" id="c1_cb" onclick="hit('c1_cb')"></label>
+      <button type="button" id="c1_button" onclick="hit('c1_button')">Other button</button>
+      <p class="do">Do: click "Child".</p>
+      <p class="expect">Expect: bclick on <code>#c1_text</code> only; the other button runs once after replay.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="C2" data-counts="c2_button">
+      <h3>C2. Same, not canceled</h3>
+      <label><span id="c2_text" class="link">Child</span><input type="checkbox" id="c2_cb" onclick="hit('c2_cb')"></label>
+      <button type="button" id="c2_button" onclick="hit('c2_button')">Other button</button>
+      <p class="do">Do: click "Child".</p>
+      <p class="expect">Expect: bclick on <code>#c2_text</code> only; ticked, button runs once.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="C3" data-counts="c3_text,c3_button">
+      <h3>C3. Child with its own effect</h3>
+      <label><span id="c3_text" class="link">Child</span><input type="checkbox" id="c3_cb" onclick="hit('c3_cb')"></label>
+      <button type="button" id="c3_button" onclick="hit('c3_button')">Other button</button>
+      <p class="do">Do: click "Child".</p>
+      <p class="expect">Expect: bclick on <code>#c3_text</code> only; both counters at 1.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="C4" data-counts="c4_button">
+      <h3>C4. Child clicks the button 50 ms later</h3>
+      <label><span id="c4_text" class="link">Child</span><input type="checkbox" id="c4_cb" onclick="hit('c4_cb')"></label>
+      <button type="button" id="c4_button" onclick="hit('c4_button')">Other button</button>
+      <p class="do">Do: click "Child".</p>
+      <p class="expect">Expect: click on <code>#c4_text</code> only (a later handler click doesn't make it a bclick).</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="C5" data-counts="c5_button">
+      <h3>C5. Element outside a label clicks a button</h3>
+      <div id="c5_div" class="widget">Div that clicks</div>
+      <button type="button" id="c5_button" onclick="hit('c5_button')">Other button</button>
+      <p class="do">Do: click the div.</p>
+      <p class="expect">Expect: bclick on <code>#c5_div</code> only.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="C6" data-counts="c6_button">
+      <h3>C6. Space on a widget clicks a button</h3>
+      <div id="c6_widget" class="widget" role="button" tabindex="0">Widget (press Space)</div>
+      <button type="button" id="c6_button" onclick="hit('c6_button')">Target</button>
+      <p class="do">Do: Tab to the widget, press Space.</p>
+      <p class="expect">Expect: click on <code>#c6_button</code> (kept: Space isn't recorded).</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="C7" data-counts="c7_submit">
+      <h3>C7. Enter in a text field clicks submit</h3>
+      <form onsubmit="return false">
+        <input type="text" id="c7_text" placeholder="type, then Enter">
+        <button type="button" id="c7_submit" onclick="hit('c7_submit')">Submit</button>
+      </form>
+      <p class="do">Do: type something, press Enter.</p>
+      <p class="expect">Expect: fill + press_key (Enter); no click on <code>#c7_submit</code>; submit runs once.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="C8" data-counts="c8_button">
+      <h3>C8. Handler guarded by isTrusted</h3>
+      <label><span id="c8_text" class="link">Child</span><input type="checkbox" id="c8_cb" onclick="hit('c8_cb')"></label>
+      <button type="button" id="c8_button" onclick="hit('c8_button')">Other button</button>
+      <p class="do">Do: click "Child".</p>
+      <p class="expect">Expect: bclick on <code>#c8_text</code> only; replayed as real input, so the guarded handler clicks the button once.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="C9" data-counts="c9_target">
+      <h3>C9. Page clicks a button 1 s later</h3>
+      <button type="button" id="c9_arm">Arm auto-click</button>
+      <button type="button" id="c9_target" onclick="hit('c9_target')">Target</button>
+      <p class="do">Do: click "Arm auto-click" and wait a second.</p>
+      <p class="expect">Expect: click on <code>#c9_arm</code> only; target runs once after replay.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="C10" data-counts="c10_first,c10_second">
+      <h3>C10. Space on a widget clicks two buttons</h3>
+      <div id="c10_widget" class="widget" role="button" tabindex="0">Widget (press Space)</div>
+      <button type="button" id="c10_first" onclick="hit('c10_first')">First</button>
+      <button type="button" id="c10_second" onclick="hit('c10_second')">Second</button>
+      <p class="do">Do: Tab to the widget, press Space.</p>
+      <p class="expect">Expect: click on <code>#c10_first</code> + click on <code>#c10_second</code>.</p>
+      <p class="status"></p>
+    </div>
+  </div>
+
+  <h2>D. Selectors, frames, shadow DOM and canvas</h2>
+  <div class="container">
+    <div class="item_test_container case" data-case="D1">
+      <h3>D1. NUL character in a data-testid</h3>
+      <div id="d1_wrap"><div class="d1-parent"><span>Click this cell</span></div></div>
+      <p class="do">Do: click the text.</p>
+      <p class="expect">Expect: a click whose css is a selector string (it used to be an empty object).</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="D2">
+      <h3>D2. data-qa / data-automation-id parents</h3>
+      <div data-qa="qa-row"><span>QA cell</span></div>
+      <div data-automation-id="auto-row"><span>Automation cell</span></div>
+      <p class="do">Do: click each text.</p>
+      <p class="expect">Expect: css on the spans, scoped like <code>[data-qa="qa-row"] span</code>, not on the parents.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="D3">
+      <h3>D3. Frames sharing a data-test-id with quotes and &gt;&gt;&gt;</h3>
+      <iframe src="./iframe.html" data-test-id='say "hi" >>> there' style="width: 260px; height: 110px"></iframe>
+      <iframe src="./iframe.html" data-test-id='say "hi" >>> there' style="width: 260px; height: 110px"></iframe>
+      <p class="do">Do: click "Click me" in each frame.</p>
+      <p class="expect">Expect: two clicks with different, valid <code>frame</code> selectors (no bare <code> &gt;&gt;&gt; </code> inside one).</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="D4">
+      <h3>D4. Checkbox in a shadow root</h3>
+      <shadow-check id="d4_host"></shadow-check>
+      <p class="do">Do: click the checkbox.</p>
+      <p class="expect">Expect: one change step.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="D5">
+      <h3>D5. Component re-dispatches a composed change</h3>
+      <shadow-check id="d5_host" data-composed></shadow-check>
+      <p class="do">Do: click the checkbox.</p>
+      <p class="expect">Expect: exactly one change step.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="D6">
+      <h3>D6. Canvas text, then Space on a checkbox</h3>
+      <canvas id="d6_canvas" width="240" height="50" style="border: 1px solid #999"></canvas>
+      <input type="checkbox" id="d6_cb" onclick="hit('d6_cb')">
+      <p class="do">Do: click the canvas, type "abc", Tab to the checkbox, press Space, click elsewhere.</p>
+      <p class="expect">Expect: bclick, bfill_value "abc" (no trailing space), change on <code>#d6_cb</code>.</p>
+      <p class="status"></p>
+    </div>
+  </div>
+
+  <h2>E. More weird ones</h2>
+  <div class="container">
+    <div class="item_test_container case" data-case="E1">
+      <h3>E1. Label for a missing id</h3>
+      <label for="e1_does_not_exist"><span id="e1_text">Labels nothing</span></label>
+      <p class="do">Do: click the text.</p>
+      <p class="expect">Expect: click on <code>#e1_text</code>; nothing toggles.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="E2">
+      <h3>E2. One label, two checkboxes</h3>
+      <label><span id="e2_text">Which one?</span><input type="checkbox" id="e2_first" onclick="hit('e2_first')"><input type="checkbox" id="e2_second" onclick="hit('e2_second')"></label>
+      <p class="do">Do: click the text, then click the second box directly.</p>
+      <p class="expect">Expect: click on <code>#e2_text</code> (ticks the first) + change on <code>#e2_second</code>.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="E3">
+      <h3>E3. Two labels for one checkbox</h3>
+      <label for="e3_cb"><span id="e3_t1">First label</span></label>
+      <input type="checkbox" id="e3_cb" onclick="hit('e3_cb')">
+      <label for="e3_cb"><span id="e3_t2">Second label</span></label>
+      <p class="do">Do: click both labels.</p>
+      <p class="expect">Expect: click on <code>#e3_t1</code>, click on <code>#e3_t2</code>; ends unchecked.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="E4">
+      <h3>E4. "for" wins over the wrapped checkbox</h3>
+      <label for="e4_other"><span id="e4_text">Wraps one, labels another</span><input type="checkbox" id="e4_inner" onclick="hit('e4_inner')"></label>
+      <span>other <input type="checkbox" id="e4_other" onclick="hit('e4_other')"></span>
+      <p class="do">Do: click the text.</p>
+      <p class="expect">Expect: click on <code>#e4_text</code>; "other" is ticked, the wrapped one isn't.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="E5">
+      <h3>E5. CSS-only checkbox (hidden input)</h3>
+      <input type="checkbox" id="e5_cb" class="css-check" onclick="hit('e5_cb')"><label for="e5_cb" id="e5_label" class="css-check-label">Newsletter</label>
+      <p class="do">Do: click the drawn box.</p>
+      <p class="expect">Expect: click on <code>#e5_label</code>; no change step.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="E6">
+      <h3>E6. Transparent checkbox over its label</h3>
+      <label style="position: relative; display: inline-block; padding: 8px 16px; border: 1px solid #999">Big toggle<input type="checkbox" id="e6_cb" onclick="hit('e6_cb')" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer"></label>
+      <p class="do">Do: click anywhere on the box.</p>
+      <p class="expect">Expect: change on <code>#e6_cb</code> (the click lands on the input).</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="E7">
+      <h3>E7. Read-only checkbox</h3>
+      <input type="checkbox" id="e7_cb" onclick="hit('e7_cb'); return false">
+      <p class="do">Do: click the box.</p>
+      <p class="expect">Expect: nothing recorded (it never changes).</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="E8">
+      <h3>E8. Indeterminate checkbox</h3>
+      <input type="checkbox" id="e8_cb" onclick="hit('e8_cb')">
+      <p class="do">Do: click the box.</p>
+      <p class="expect">Expect: change on <code>#e8_cb</code> (checked: true).</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="E9">
+      <h3>E9. &lt;details&gt; inside a label</h3>
+      <label><details style="display: inline-block"><summary id="e9_summary">More</summary>hidden text</details><input type="checkbox" id="e9_cb" onclick="hit('e9_cb')"></label>
+      <p class="do">Do: click "More".</p>
+      <p class="expect">Expect: click on <code>#e9_summary</code>; details opens, checkbox unchanged.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="E10" data-counts="e10_button">
+      <h3>E10. Button inside a label</h3>
+      <label><button type="button" id="e10_button" onclick="hit('e10_button')">Button</button><input type="checkbox" id="e10_cb" onclick="hit('e10_cb')"></label>
+      <p class="do">Do: click the button.</p>
+      <p class="expect">Expect: click on <code>#e10_button</code>; checkbox unchanged.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="E11">
+      <h3>E11. Image inside a label</h3>
+      <label><img id="e11_img" width="24" height="24" alt="" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24'><circle cx='12' cy='12' r='10' fill='%2306f'/></svg>"><input type="checkbox" id="e11_cb" onclick="hit('e11_cb')"></label>
+      <p class="do">Do: click the blue dot.</p>
+      <p class="expect">Expect: click on <code>#e11_img</code>; ticked.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="E12">
+      <h3>E12. SVG icon inside a label</h3>
+      <label><svg id="e12_svg" width="28" height="28" viewBox="0 0 24 24"><path d="M2 12l7 7L22 4" stroke="#0a0" stroke-width="4" fill="none"/></svg><input type="checkbox" id="e12_cb" onclick="hit('e12_cb')"></label>
+      <p class="do">Do: click the green stroke.</p>
+      <p class="expect">Expect: one click on the icon; ticked.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="E13">
+      <h3>E13. Label re-rendered on every change</h3>
+      <label id="e13_label"><span id="e13_text">Re-rendered</span><input type="checkbox" id="e13_cb"></label>
+      <p class="do">Do: click the text twice.</p>
+      <p class="expect">Expect: click on <code>#e13_text</code>, then mouseover on <code>#e13_label</code> and click on the new <code>#e13_text</code>; ends unchecked.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="E14">
+      <h3>E14. Checkbox in a disabled fieldset</h3>
+      <fieldset disabled><label><span id="e14_text">Disabled by fieldset</span><input type="checkbox" id="e14_cb"></label></fieldset>
+      <p class="do">Do: click the text.</p>
+      <p class="expect">Expect: click on <code>#e14_text</code>; nothing toggles.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="E15">
+      <h3>E15. Double-click a label</h3>
+      <label><span id="e15_text">Double-click me</span><input type="checkbox" id="e15_cb" onclick="hit('e15_cb')"></label>
+      <p class="do">Do: double-click the text.</p>
+      <p class="expect">Expect: two clicks + a dblclick on <code>#e15_text</code>; ends unchecked.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="E16">
+      <h3>E16. Custom radio group with arrow keys</h3>
+      <div id="e16_group" class="widget" role="radiogroup" tabindex="0">
+        <span>A <input type="radio" name="e16" id="e16_a"></span>
+        <span>B <input type="radio" name="e16" id="e16_b"></span>
+        <span>C <input type="radio" name="e16" id="e16_c"></span>
+      </div>
+      <p class="do">Do: Tab to the group, press Right twice.</p>
+      <p class="expect">Expect: change on <code>#e16_a</code>, then <code>#e16_b</code> (arrow keys aren't recorded).</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="E17" data-counts="e17_button">
+      <h3>E17. role=button div activated with Enter</h3>
+      <div id="e17_button" class="widget" role="button" tabindex="0" onclick="hit('e17_button')">Press Enter on me</div>
+      <p class="do">Do: Tab to it, press Enter.</p>
+      <p class="expect">Expect: one click on <code>#e17_button</code> (its script click, kept).</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case known" data-case="E18">
+      <h3>E18. Observe: hover icon whose click navigates</h3>
+      <label id="e18_label"><span>Hover me, click the check mark</span><input type="checkbox" id="e18_cb"></label>
+      <p class="do">Do: hover, click the check mark (goes to the second page).</p>
+      <p class="expect">Observe: which element the click is recorded on, and that it's recorded before the next goto.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case known" data-case="E19" data-counts="e19_button">
+      <h3>E19. Known limit: page stops the click at window</h3>
+      <button type="button" id="e19_button">Hidden from the recorder</button>
+      <p class="do">Do: click the button.</p>
+      <p class="expect">Expect: nothing recorded; a window capture listener stops the click before the recorder.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="E20">
+      <h3>E20. Form reset</h3>
+      <form id="e20_form" onsubmit="return false">
+        <span>a <input type="checkbox" id="e20_a" checked></span>
+        <span>b <input type="checkbox" id="e20_b"></span>
+        <button type="reset" id="e20_reset">Reset</button>
+      </form>
+      <p class="do">Do: toggle a and b, then click Reset.</p>
+      <p class="expect">Expect: two changes + click on <code>#e20_reset</code>; ends a=on b=off.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="E21">
+      <h3>E21. Script sets .checked without events</h3>
+      <button type="button" id="e21_button">Flip silently</button>
+      <input type="checkbox" id="e21_cb">
+      <p class="do">Do: click the button.</p>
+      <p class="expect">Expect: click on <code>#e21_button</code> only.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="E22">
+      <h3>E22. Label and checkbox in a shadow root</h3>
+      <shadow-label id="e22_host"></shadow-label>
+      <p class="do">Do: click the text.</p>
+      <p class="expect">Expect: one click (shadow xpath); no change step.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="E23">
+      <h3>E23. pointer-events: none on the label text</h3>
+      <label id="e23_label"><span id="e23_text" style="pointer-events: none">Click through me</span><input type="checkbox" id="e23_cb" onclick="hit('e23_cb')"></label>
+      <p class="do">Do: click the text.</p>
+      <p class="expect">Expect: click on <code>#e23_label</code>; ticked.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="E24" data-counts="e24">
+      <h3>E24. data-testid with quotes and &gt;&gt;&gt;</h3>
+      <input type="checkbox" data-testid='opt "a" >>> b' onclick="hit('e24')">
+      <p class="do">Do: click the box.</p>
+      <p class="expect">Expect: change with a valid, escaped selector.</p>
+      <p class="status"></p>
+    </div>
+    <div class="item_test_container case" data-case="E25">
+      <h3>E25. Repeated widgets without ids</h3>
+      <div class="e25-row"><label><span>Item</span><input type="checkbox"></label></div>
+      <div class="e25-row"><label><span>Item</span><input type="checkbox"></label></div>
+      <p class="do">Do: click the second "Item".</p>
+      <p class="expect">Expect: a click whose selector matches only the second row.</p>
+      <p class="status"></p>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const counts = {};
+
+  function toggles(root) {
+    const found = [];
+    root.querySelectorAll('*').forEach((el) => {
+      if (el.matches('input[type="checkbox" i], input[type="radio" i]')) {
+        found.push(el);
+      }
+      if (el.shadowRoot) {
+        found.push(...toggles(el.shadowRoot));
+      }
+    });
+    return found;
+  }
+
+  function renderStatus() {
+    document.querySelectorAll('.case').forEach((card) => {
+      const states = toggles(card).map((el, i) => {
+        const name = el.id || el.dataset.testid || `#${i + 1}`;
+        return `${name}=${el.checked ? 'on' : 'off'}${counts[name] ? '/' + counts[name] : ''}`;
+      });
+      const extra = (card.dataset.counts || '')
+        .split(',')
+        .filter(Boolean)
+        .map((name) => `${name}:${counts[name] || 0}`);
+      card.querySelector('.status').textContent = [...states, ...extra].join(' ');
+    });
+  }
+
+  window.hit = (name) => {
+    counts[name] = (counts[name] || 0) + 1;
+    setTimeout(renderStatus, 0);
+  };
+
+  function hoverIcon(labelId, iconId) {
+    const label = $(labelId);
+    label.addEventListener('mouseenter', () => {
+      if ($(iconId)) return;
+      const icon = document.createElement('i');
+      icon.id = iconId;
+      icon.className = 'icon';
+      icon.textContent = '\u2714';
+      label.appendChild(icon);
+    });
+    label.addEventListener('mouseleave', () => {
+      const icon = $(iconId);
+      if (icon) icon.remove();
+    });
+  }
+
+  function customWidget(widgetId, checkboxId, delay) {
+    const widget = $(widgetId);
+    const checkbox = $(checkboxId);
+    const toggle = () => {
+      checkbox.click();
+      widget.setAttribute('aria-checked', checkbox.checked);
+      widget.firstChild.textContent = (checkbox.checked ? '\u2611' : '\u2610') + widget.firstChild.textContent.slice(1);
+    };
+    widget.addEventListener('keydown', (ev) => {
+      if (ev.key !== ' ') return;
+      ev.preventDefault();
+      if (delay) setTimeout(toggle, delay);
+      else toggle();
+    });
+  }
+
+  function customBox(boxId, checkboxId, delay) {
+    const box = $(boxId);
+    const checkbox = $(checkboxId);
+    box.addEventListener('click', () => {
+      const toggle = () => {
+        checkbox.click();
+        box.textContent = (checkbox.checked ? '\u2611' : '\u2610') + box.textContent.slice(1);
+      };
+      if (delay) setTimeout(toggle, delay);
+      else toggle();
+    });
+  }
+
+  function childClicks(textId, buttonId, { cancel, delay, guard, own } = {}) {
+    $(textId).addEventListener('click', (ev) => {
+      if (own) hit(textId);
+      if (cancel) ev.preventDefault();
+      if (guard && !ev.isTrusted) return;
+      if (delay) setTimeout(() => $(buttonId).click(), delay);
+      else $(buttonId).click();
+    });
+  }
+
+  // A. clicks inside labels
+  $('a2_terms').addEventListener('click', (ev) => {
+    ev.preventDefault();
+    hit('a2_terms');
+  });
+  $('a5_label').addEventListener('click', (ev) => {
+    if (ev.target.id !== 'a5_text') return;
+    const replacement = document.createElement('input');
+    replacement.type = 'checkbox';
+    replacement.id = 'a5_cb';
+    replacement.setAttribute('onclick', "hit('a5_cb')");
+    replacement.checked = $('a5_cb').checked;
+    $('a5_cb').replaceWith(replacement);
+  });
+  $('a6_label').addEventListener('click', (ev) => {
+    if (ev.target.id === 'a6_text') ev.currentTarget.htmlFor = 'a6_second';
+  });
+  $('a10_label').addEventListener('click', (ev) => {
+    if (ev.target === $('a10_cb')) ev.preventDefault();
+  });
+  hoverIcon('a12_label', 'a12_icon');
+  $('a13_cb').addEventListener('change', () => {
+    const icon = document.createElement('i');
+    icon.id = 'a13_icon';
+    icon.className = 'icon';
+    icon.textContent = $('a13_cb').checked ? '\u2611' : '\u2610';
+    $('a13_icon').replaceWith(icon);
+  });
+  setTimeout(() => {
+    const label = document.createElement('label');
+    label.id = 'a14_label';
+    label.htmlFor = 'a14_cb';
+    $('a14_slot').appendChild(label);
+    const text = document.createElement('span');
+    text.id = 'a14_text';
+    text.textContent = 'Built in two steps';
+    label.appendChild(text);
+    $('a14_slot').insertAdjacentHTML('beforeend', '<input type="checkbox" id="a14_cb" onclick="hit(\'a14_cb\')">');
+    label.addEventListener('click', (ev) => {
+      if (ev.target === label) ev.preventDefault();
+    });
+    renderStatus();
+  }, 300);
+  hoverIcon('a15_label', 'a15_icon');
+  hoverIcon('a19_label', 'a19_icon');
+
+  // B. checkbox changes without a click of their own
+  $('b1_focus').addEventListener('click', () => $('b1_widget').focus());
+  customWidget('b1_widget', 'b1_cb');
+  customWidget('b2_widget', 'b2_cb', 150);
+  $('b3_label').addEventListener('click', (ev) => {
+    if (ev.target === $('b3_cb')) return;
+    ev.preventDefault();
+    setTimeout(() => $('b3_cb').click(), 150);
+  });
+  customBox('b4_box', 'b4_cb');
+  customBox('b5_box', 'b5_cb', 30);
+  customBox('b6_box', 'b6_cb', 150);
+  $('b7_all').addEventListener('click', () => {
+    ['b7_one', 'b7_two'].forEach((id) => {
+      if (!$(id).checked) $(id).click();
+    });
+  });
+  ['b8', 'b9'].forEach((prefix) => {
+    $(`${prefix}_main`).addEventListener('change', () => {
+      if ($(`${prefix}_main`).checked && !$(`${prefix}_follower`).checked) $(`${prefix}_follower`).click();
+    });
+  });
+  $('b10_cb').addEventListener('change', () => $('b10_button').click());
+  $('b11_widget').addEventListener('keydown', (ev) => {
+    if (ev.key !== ' ') return;
+    ev.preventDefault();
+    $('b11_x').click();
+    $('b11_y').click();
+  });
+  customWidget('b13_widget', 'b13_cb', 150);
+  customBox('b14_box', 'b14_cb', 80);
+
+  // C. clicks made by page scripts
+  childClicks('c1_text', 'c1_button', { cancel: true });
+  childClicks('c2_text', 'c2_button');
+  childClicks('c3_text', 'c3_button', { cancel: true, own: true });
+  childClicks('c4_text', 'c4_button', { cancel: true, delay: 50 });
+  childClicks('c5_div', 'c5_button');
+  $('c6_widget').addEventListener('keydown', (ev) => {
+    if (ev.key !== ' ') return;
+    ev.preventDefault();
+    $('c6_button').click();
+  });
+  $('c7_text').addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter') $('c7_submit').click();
+  });
+  childClicks('c8_text', 'c8_button', { cancel: true, guard: true });
+  $('c9_arm').addEventListener('click', () => setTimeout(() => $('c9_target').click(), 1000));
+  $('c10_widget').addEventListener('keydown', (ev) => {
+    if (ev.key !== ' ') return;
+    ev.preventDefault();
+    $('c10_first').click();
+    $('c10_second').click();
+  });
+
+  // D. selectors, frames, shadow DOM and canvas
+  document.querySelector('#d1_wrap .d1-parent').setAttribute('data-testid', 'row\u0000one');
+  customElements.define('shadow-check', class extends HTMLElement {
+    connectedCallback() {
+      if (this.shadowRoot) return;
+      const root = this.attachShadow({ mode: 'open' });
+      root.innerHTML = `<input type="checkbox" id="${this.id}_cb">`;
+      if (this.hasAttribute('data-composed')) {
+        root.querySelector('input').addEventListener('change', (ev) => {
+          if (!ev.composed) ev.target.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
+        });
+      }
+    }
+  });
+  customElements.define('shadow-label', class extends HTMLElement {
+    connectedCallback() {
+      if (this.shadowRoot) return;
+      this.attachShadow({ mode: 'open' }).innerHTML =
+        `<label><span id="${this.id}_text">Shadow label</span><input type="checkbox" id="${this.id}_cb"></label>`;
+    }
+  });
+  const canvas = $('d6_canvas');
+  const ctx = canvas.getContext('2d');
+  let canvasText = '';
+  let canvasActive = false;
+  const drawCanvas = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.font = '16px sans-serif';
+    ctx.fillText(canvasText || (canvasActive ? '|' : 'click and type'), 8, 30);
+  };
+  drawCanvas();
+  canvas.addEventListener('click', () => {
+    canvasActive = true;
+    drawCanvas();
+  });
+  document.addEventListener('keydown', (ev) => {
+    if (!canvasActive || document.activeElement !== document.body) return;
+    if (ev.key.length === 1) canvasText += ev.key;
+    else if (ev.key === 'Backspace') canvasText = canvasText.slice(0, -1);
+    drawCanvas();
+  });
+  document.addEventListener('click', (ev) => {
+    if (ev.target !== canvas) canvasActive = false;
+  });
+
+  // E. more weird ones
+  $('e8_cb').indeterminate = true;
+  $('e13_label').addEventListener('change', (ev) => {
+    const checked = ev.target.checked;
+    $('e13_label').innerHTML =
+      `<span id="e13_text">Re-rendered ${checked ? '(on)' : '(off)'}</span><input type="checkbox" id="e13_cb"${checked ? ' checked' : ''}>`;
+    renderStatus();
+  });
+  $('e16_group').addEventListener('keydown', (ev) => {
+    const radios = ['e16_a', 'e16_b', 'e16_c'].map($);
+    const current = radios.findIndex((radio) => radio.checked);
+    let next = null;
+    if (ev.key === 'ArrowRight' || ev.key === 'ArrowDown') next = (current + 1) % radios.length;
+    if (ev.key === 'ArrowLeft' || ev.key === 'ArrowUp') next = (current + radios.length - 1) % radios.length;
+    if (next === null) return;
+    ev.preventDefault();
+    radios[next].click();
+  });
+  $('e17_button').addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter') ev.currentTarget.click();
+  });
+  hoverIcon('e18_label', 'e18_icon');
+  $('e18_label').addEventListener('click', (ev) => {
+    if (ev.target.id === 'e18_icon') window.location.href = './secondpage.html';
+  });
+  window.addEventListener('click', (ev) => {
+    if (ev.target.closest && ev.target.closest('#e19_button')) {
+      ev.stopImmediatePropagation();
+      hit('e19_button');
+    }
+  }, true);
+  $('e20_form').addEventListener('reset', () => setTimeout(renderStatus, 0));
+  $('e21_button').addEventListener('click', () => {
+    $('e21_cb').checked = !$('e21_cb').checked;
+  });
+
+  document.addEventListener('click', () => setTimeout(renderStatus, 0));
+  document.addEventListener('change', () => setTimeout(renderStatus, 0));
+  setInterval(renderStatus, 500);
+  renderStatus();
+})();
+</script>
+
+</body>
+</html>
