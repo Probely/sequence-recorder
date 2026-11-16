@@ -9,7 +9,8 @@ JSON example containing all possible step types produced by the sequence recorde
     "type": "goto",
     "url": "https://example.com/login",
     "windowWidth": 1280,
-    "windowHeight": 720
+    "windowHeight": 720,
+    "allow_popups": true
   },
   {
     "timestamp": 1718724000000,
@@ -154,7 +155,7 @@ JSON example containing all possible step types produced by the sequence recorde
 
 | Type | Description |
 |------|-------------|
-| `goto` | Navigate to a URL; first step in every recording |
+| `goto` | Navigate to a URL; first step in every recording. The first step includes `allow_popups: true` when a popup (new window or tab opened by the page, e.g. `window.open()` or a `target="_blank"` link) was opened during the recording; the property is omitted otherwise |
 | `click` | Standard left click on an element |
 | `bclick` | Click on a canvas surface, includes `coords` (`x`, `y`, `width`, `height`). May include `shadow_host_css` when targeting a canvas inside a shadow DOM |
 | `dblclick` | Double click on an element |
