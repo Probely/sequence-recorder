@@ -50,6 +50,20 @@ JSON example containing all possible step types produced by the sequence recorde
     "shadow_host_css": "#my-web-component"
   },
   {
+    "timestamp": 1718724002500,
+    "css": "#remember-me-box",
+    "xpath": "/html/body/div/form/span",
+    "type": "bclick",
+    "value": "Remember me",
+    "frame": "",
+    "coords": {
+      "x": 42,
+      "y": 9,
+      "width": 96,
+      "height": 20
+    }
+  },
+  {
     "timestamp": 1718724003000,
     "css": ".row-item",
     "xpath": "/html/body/div/table/tr[2]",
@@ -63,6 +77,22 @@ JSON example containing all possible step types produced by the sequence recorde
     "xpath": "/html/body/nav/ul/li[2]",
     "type": "mouseover",
     "value": "Products",
+    "frame": ""
+  },
+  {
+    "timestamp": 1718724005300,
+    "css": "#accept-label",
+    "xpath": "/html/body/div/form/label",
+    "type": "mouseover",
+    "value": "Accept",
+    "frame": ""
+  },
+  {
+    "timestamp": 1718724005300,
+    "css": "#accept-label > .check-icon",
+    "xpath": "/html/body/div/form/label",
+    "type": "click",
+    "value": "",
     "frame": ""
   },
   {
@@ -157,9 +187,9 @@ JSON example containing all possible step types produced by the sequence recorde
 |------|-------------|
 | `goto` | Navigate to a URL; first step in every recording. The first step includes `allow_popups: true` when a popup (new window or tab opened by the page, e.g. `window.open()` or a `target="_blank"` link) was opened during the recording; the property is omitted otherwise |
 | `click` | Standard left click on an element |
-| `bclick` | Click on a canvas surface, includes `coords` (`x`, `y`, `width`, `height`). May include `shadow_host_css` when targeting a canvas inside a shadow DOM |
+| `bclick` | Click replayed as real input: a click on a canvas surface, or on an element whose click handlers immediately clicked other elements (handlers that check `event.isTrusted` only do that again for real input). `coords` (`x`, `y`, `width`, `height`) are relative to the element `css` selects; a click made with the keyboard has none and is replayed at the element's center. May include `shadow_host_css` when targeting a canvas inside a shadow DOM |
 | `dblclick` | Double click on an element |
-| `mouseover` | Hover over an element (debounced at 500ms) |
+| `mouseover` | Hover over an element (debounced at 500ms). Also recorded right before a click on content added to a label after the page rendered it (e.g. an icon created on hover), on the content's closest ancestor that was already there, so the content exists when the click is replayed |
 | `fill_value` | Value entered into an `<input>` or `<textarea>` (captured on blur or Enter) |
 | `bfill_value` | Buffered fill — keystroke-reconstructed value when the DOM `.value` is empty (e.g. virtual keyboards, frameworks that clear the field, or canvas-rendered forms). For canvas inputs, includes `coords` from the preceding `bclick` that activated the virtual field |
 | `press_key` | Key press, currently only Enter (`value: 13`), emitted after a `fill_value`/`bfill_value` on Enter |
@@ -173,7 +203,7 @@ JSON example containing all possible step types produced by the sequence recorde
 |-------|-------------|
 | `timestamp` | Unix timestamp in milliseconds |
 | `css` | CSS selector for the target element |
-| `xpath` | XPath selector for the target element |
+| `xpath` | XPath selector for the target element, used when `css` matches nothing. For a click on content added to a label later that the label passed on to its checkbox or radio, it's the label's XPath |
 | `type` | Event type identifier |
 | `value` | Element value or trimmed text content (max 20 chars for clicks) |
 | `frame` | CSS selector of the containing iframe, empty string if top-level. For nested iframes, selectors are joined with ` >>> ` from outermost to innermost (e.g. `#outer-iframe >>> #inner-iframe`) |
